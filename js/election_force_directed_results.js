@@ -50,23 +50,23 @@ d3.csv("data/presdential_results.csv", function(data) {
 		var republican = data[i].Republican;
 		var democrat = data[i].Democrat;
 		var independent = data[i].Independent;
-		for(var j = 0; j < 5; i++) {
+		for(var j = 0; j < 538; i++) {
 			if(republican > 0) {
-				if(sched_objs.length != 538) {
+				if(i == 0) {
 					sched_objs.push([0])
 				} else {
 					sched_objs[j].push(0);
 				}
 				republican -= 1;
 			} else if(democrat > 0) {
-				if(nodes.length != 538) {
+				if(i == 0) {
 					sched_objs.push([1])
 				} else {
 					sched_objs[j].push(1);
 				}
 				democrat -= 1;
 			} else if(independent > 0) {
-				if(nodes.length != 538) {
+				if(i == 0) {
 					sched_objs.push([2])
 				} else {
 					sched_objs[j].push(2);
