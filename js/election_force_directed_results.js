@@ -22,20 +22,11 @@ var speeds = { "slow": 200, "medium": 125, "fast": 75 };
 var notes_index = 0;
 
 
-// Activity to put in center of circle arrangement
-var center_act = "Did not vote",
-	center_pt = { "x": 380, "y": 365 };
-
-
 // Coordinates for activities
 var foci = {};
 act_codes.forEach(function(code, i) {
-	if (code.desc == center_act) {
-		foci[code.index] = center_pt;
-	} else {
-		var theta = 2 * Math.PI / (act_codes.length-1);
-		foci[code.index] = {x: 250 * Math.cos((i - 1) * theta)+380, y: 250 * Math.sin((i - 1) * theta)+365 };
-	}
+	var theta = 2 * Math.PI / (act_codes.length-1);
+	foci[code.index] = {x: 250 * Math.cos((i - 1) * theta)+380, y: 250 * Math.sin((i - 1) * theta)+365 };
 });
 
 
@@ -51,36 +42,45 @@ var svg = d3.select("#chart").append("svg")
 let electionData = [];
 var nodes = [];
 var act_counts = {};
-d3.csv("data/presidential_results.csv", function(data) {
+var force; 
+var circle;
+var sched_objs = [];
+d3.csv("data/presdential_results.csv", function(data) {
 	for(var i = 0; i < data.length; i++) {
-		let yearData = {
-			"year": data[i].Year,
-			"republican": data[i].Republican,
-			"democrat": data[i].Democrat,
-			"independent": data[i].Independent
+		var republican = data[i].Republican;
+		var democrat = data[i].Democrat;
+		var independent = data[i].Independent;
+		for(var j = 0; j < 5; i++) {
+			if(republican > 0) {
+				if(sched_objs.length != 538) {
+					sched_objs.push([0])
+				} else {
+					sched_objs[j].push(0);
+				}
+				republican -= 1;
+			} else if(democrat > 0) {
+				if(nodes.length != 538) {
+					sched_objs.push([1])
+				} else {
+					sched_objs[j].push(1);
+				}
+				democrat -= 1;
+			} else if(independent > 0) {
+				if(nodes.length != 538) {
+					sched_objs.push([2])
+				} else {
+					sched_objs[j].push(2);
+				}
+				independent -= 1;
+			} else {
+				console.log("You messed up homie");
+			}
 		}
-		electionData.push(yearData);
+		console.log("yay")
 	}
 
-	// initialize nodes
-	act_counts = { "0": electionData[0].republican * 538, "1": electionData[0].democrat * 538, "2": electionData[0].independent * 538 };
 
-	//Init republican nodes
-	for(var i = 0; i < act_counts[0]; i++) {
-		var init_x = foci[0].x + Math.random();
-		var init_y = foci[0].y + Math.random();
-		let node = {
-			act: 0,
-			radius: 3,
-			x: init_x,
-			y: init_y,
-			color: "red"
-		}
-		nodes.push(node)
-	}
-});
-
-var force = d3.layout.force()
+	force = d3.layout.force()
 		.nodes(nodes)
 		.size([width, height])
 		// .links([])
@@ -88,12 +88,15 @@ var force = d3.layout.force()
 		.charge(0)
 		.friction(.9)
 		.start();
-
-var circle = svg.selectAll("circle")
+	
+	circle = svg.selectAll("circle")
 	.data(nodes)
 	.enter().append("circle")
 	.attr("r", function(d) { return d.radius; })
 	.style("fill", function(d) { return d.color; });
+});
+
+
 
 function color(activity) {
 
