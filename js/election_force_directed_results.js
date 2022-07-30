@@ -6,6 +6,50 @@ var width = 750,
 var sched_objs = [],
 	curr_slide = 0;
 
+// D3 Projection
+var projection = d3.geo.albersUsa()
+				   .translate([width/2, height/2])    // translate to center of screen
+				   .scale([500]);          // scale things down so see entire US
+        
+// Define path generator
+var path = d3.geo.path()               // path generator that will convert GeoJSON to SVG paths
+		  	 .projection(projection);  // tell path generator to use albersUsa projection
+
+
+var svg = d3.select("#usaMap")
+	.append("svg")
+	.attr("width", 93)
+	.attr("height", 56);
+
+// Load GeoJSON data and merge with states data
+d3.json("data/us-states.json", function(json) {
+			
+	// Bind the data to the SVG and create one path per GeoJSON feature
+	svg.selectAll("path")
+		.data(json.features)
+		.enter()
+		.append("path")
+		.attr("d", path)
+		.style("stroke", "#fff")
+		.style("stroke-width", "1")
+		.style("fill", function(d) {
+	
+		/*
+		// Get data value
+		var value = d.properties.visited;
+	
+		if (value) {
+		//If value exists…
+		return color(value);
+		} else {
+		//If value is undefined…
+		return "rgb(213,222,217)";
+		}
+		*/
+	});
+});	
+
+
 var act_codes = [
 	{"index": "0", "short": "Democrat", "desc": "Democrat"},
 	{"index": "1", "short": "Republican", "desc": "Republican"},
