@@ -6,48 +6,44 @@ var width = 750,
 var sched_objs = [],
 	curr_slide = 0;
 
-// D3 Projection
-var projection = d3.geo.albersUsa()
-				   .translate([width/2, height/2])    // translate to center of screen
-				   .scale([500]);          // scale things down so see entire US
-        
-// Define path generator
-var path = d3.geo.path()               // path generator that will convert GeoJSON to SVG paths
-		  	 .projection(projection);  // tell path generator to use albersUsa projection
+d3.csv("data/state_results.csv", function(stateData) { 
+	// D3 Projection
+	var projection = d3.geo.albersUsa()
+	.translate([230, 125])    // translate to center of screen
+	.scale([500]);          // scale things down so see entire US
 
+	// Define path generator
+	var path = d3.geo.path()               // path generator that will convert GeoJSON to SVG paths
+	.projection(projection);  // tell path generator to use albersUsa projection
 
-var svg = d3.select("#usaMap")
-	.append("svg")
-	.attr("width", 93)
-	.attr("height", 56);
-
-// Load GeoJSON data and merge with states data
-d3.json("data/us-states.json", function(json) {
-			
-	// Bind the data to the SVG and create one path per GeoJSON feature
-	svg.selectAll("path")
-		.data(json.features)
-		.enter()
-		.append("path")
-		.attr("d", path)
-		.style("stroke", "#fff")
-		.style("stroke-width", "1")
-		.style("fill", function(d) {
+	var map = d3.select("#usaMap")
+		.append("svg")
+		.attr("width", 450)
+		.attr("height", 250);
 	
-		/*
-		// Get data value
-		var value = d.properties.visited;
-	
-		if (value) {
-		//If value exists…
-		return color(value);
-		} else {
-		//If value is undefined…
-		return "rgb(213,222,217)";
-		}
-		*/
-	});
-});	
+	// Load GeoJSON data and merge with states data
+	d3.json("data/us-states.json", function(json) {
+		// Bind the data to the SVG and create one path per GeoJSON feature
+		map.selectAll("path")
+			.data(json.features)
+			.enter()
+			.append("path")
+			.attr("d", path)
+			.style("stroke", "#fff")
+			.style("stroke-width", "1")
+			.style("fill", function(d) {
+					for(const property in stateData[0]) {
+						if(property == d.properties.name) {
+							var colorByActivity = {
+								"1": "red",
+								"0": "blue",
+								"2": "yellow"
+							}
+							return colorByActivity[stateData[0][property]];
+						}
+					}
+				});
+		});
 
 
 var act_codes = [
@@ -97,10 +93,6 @@ var svg = d3.select("#chart").append("svg")
     .attr('left', '200px')
     .attr('top', '200px');
 
-
-let electionData = [];
-var nodes = [];
-var act_counts = {};
 var force; 
 var circle;
 var sched_objs = [];
@@ -194,7 +186,6 @@ d3.csv("data/presdential_results.csv", function(data) {
 
 	label.append("tspan")
 		.attr("x", function() { return d3.select(this.parentNode).attr("x"); })
-		// .attr("dy", "1.3em")
 		.attr("text-anchor", "middle")
 		.text(function(d) {
 			return d.short;
@@ -225,7 +216,6 @@ d3.csv("data/presdential_results.csv", function(data) {
 		.attr('height', 250)
 		.style('position', 'relative')
 		.style('opacity', 0)
-		.style('margin-right', '325px')
 		.style("display", "block")
 		.style("background", "blue")
 		.style("padding", "8px")
@@ -256,7 +246,6 @@ d3.csv("data/presdential_results.csv", function(data) {
 		.style("font-size", "150%")
 		.style("font-family", "adobe-caslon-pro")
 		.style("top", "10px")
-		.style('margin-right', '375px')
 		.text(notes[curr_slide].demCanName)
 		.transition()
 		.duration(500)
@@ -276,7 +265,7 @@ d3.csv("data/presdential_results.csv", function(data) {
 		.style("color", "#000000");
 
 	d3.select(".nextbutton").on("click", function() {
-		if(curr_slide < data.length) {
+		if(curr_slide < data.length-1) {
 			curr_slide += 1;
 			d3.range(nodes.length).map(function(i) {
 				var current_node = nodes[i];
@@ -308,7 +297,6 @@ d3.csv("data/presdential_results.csv", function(data) {
 				.attr('height', 250)
 				.style('position', 'relative')
 				.style('opacity', 0)
-				.style('margin-right', '325px')
 				.style("display", "block")
 				.style("background", "blue")
 				.style("padding", "8px")
@@ -348,6 +336,20 @@ d3.csv("data/presdential_results.csv", function(data) {
 				.duration(500)
 				.style("text-align", "center")
 				.style("color", "#000000");
+
+			map.selectAll("path")
+				.style("fill", function(d) {
+					for(const property in stateData[curr_slide]) {
+						if(property == d.properties.name) {
+							var colorByActivity = {
+								"1": "red",
+								"0": "blue",
+								"2": "yellow"
+							}
+							return colorByActivity[stateData[curr_slide][property]];
+						}
+					}
+			});
 		}
 	});
 
@@ -384,7 +386,6 @@ d3.csv("data/presdential_results.csv", function(data) {
 				.attr('height', 250)
 				.style('position', 'relative')
 				.style('opacity', 0)
-				.style('margin-right', '325px')
 				.style("display", "block")
 				.style("background", "blue")
 				.style("padding", "8px")
@@ -423,6 +424,21 @@ d3.csv("data/presdential_results.csv", function(data) {
 				.duration(500)
 				.style("text-align", "center")
 				.style("color", "#000000");
+			
+			map.selectAll("path")
+				.style("fill", function(d) {
+					for(const property in stateData[curr_slide]) {
+						if(property == d.properties.name) {
+							var colorByActivity = {
+								"1": "red",
+								"0": "blue",
+								"2": "yellow"
+							}
+							return colorByActivity[stateData[curr_slide][property]];
+						}
+					}
+			});
+		
 		}
 	})
 
@@ -503,3 +519,4 @@ function readablePercent(n) {
 
 	return pct;
 }
+});
