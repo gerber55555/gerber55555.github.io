@@ -5,7 +5,7 @@ var width = 750,
 
 var sched_objs = [],
 	curr_slide = 0;
-
+d3.csv("data/state_electoral_college_vote_worth.csv", function(voteWorth) {
 d3.csv("data/state_results.csv", function(stateData) { 
 	// D3 Projection
 	var projection = d3.geo.albersUsa()
@@ -60,7 +60,7 @@ d3.csv("data/state_results.csv", function(stateData) {
 					div.transition()
 						.duration(200)
 						.style("opacity", .9);
-						div.text(d.properties.name)
+						div.text(d.properties.name + "\n" + voteWorth[curr_slide][d.properties.name])
 						.style("left", (d3.event.pageX) + "px")     
 						.style("top", (d3.event.pageY - 28) + "px");    
 				}).on("mouseout", function(d) {
@@ -378,7 +378,7 @@ d3.csv("data/presdential_results.csv", function(data) {
 				div.transition()
 					.duration(200)
 					.style("opacity", .9);
-					div.text(d.properties.name)
+					div.text(d.properties.name + "\n" + voteWorth[curr_slide][d.properties.name])
 					.style("left", (d3.event.pageX) + "px")     
 					.style("top", (d3.event.pageY - 28) + "px");    
 			}).on("mouseout", function(d) {
@@ -477,7 +477,7 @@ d3.csv("data/presdential_results.csv", function(data) {
 				div.transition()
 					.duration(200)
 					.style("opacity", .9);
-					div.text(d.properties.name)
+					div.text(d.properties.name + "\n" + voteWorth[curr_slide][d.properties.name])
 					.style("left", (d3.event.pageX) + "px")     
 					.style("top", (d3.event.pageY - 28) + "px");    
 			}).on("mouseout", function(d) {
@@ -566,4 +566,5 @@ function readablePercent(n) {
 
 	return pct;
 }
+});
 });
