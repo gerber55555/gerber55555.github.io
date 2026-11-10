@@ -3,7 +3,7 @@
 A 50 mm wearable pendant with a raised rim, a diamond emblem and raised "Jira" text on the front,
 "STATUS = SUCCESS" inlaid in blue on the back, and a print-in-place chain to hang it on.
 
-![front](preview.png) ![back](back_preview.png)
+![front and back](preview.png)
 
 ## Medallion
 
