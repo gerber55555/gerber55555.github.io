@@ -3,7 +3,7 @@
 Outputs (in this folder):
   medallion.stl          - single-colour, one-piece print
   medallion_gold.stl     - gold body (disc, rims, text, bail)   } multi-colour parts,
-  medallion_blue.stl     - dark-blue diamond frame              } all share the same
+  medallion_blue.stl     - dark-blue diamond frame + back inlay text             } all share the same
   medallion_lightblue.stl- light-blue inner diamond             } coordinates
   medallion.3mf          - all three parts in one file for AMS/MMU printers
 
@@ -31,6 +31,12 @@ INNER_HALF = 5.4                # inner light diamond half-diagonal
 GAP = 0.8                       # gold gap between frame and inner diamond
 TEXT = "Jira"
 TEXT_H, TEXT_Y, TEXT_RAISE = 9.0, -13.0, 1.2
+# back: "STATUS = SUCCESS" inlaid into the bottom face, printed in blue in the first layer.
+# Text is mirrored in the model so it reads correctly when you turn the medallion over.
+BACK_LINES = [("STATUS", 9.5), ("=", 0.0), ("SUCCESS", -9.5)]   # (text, centre y)
+BACK_CAP_H = 6.0                # capital letter height
+BACK_MAX_W = 34.0               # longest line is shrunk to fit this width
+BACK_DEPTH = 0.2                # inlay depth = your first-layer height (use 0.4 for two layers)
 BAIL_OR, BAIL_HOLE = 5.8, 2.6   # bail outer radius / hole radius (5.2 mm hole)
 BAIL_CY = R + 3.4               # bail centre (overlaps the disc)
 SEG = 128
@@ -48,7 +54,7 @@ def poly_to_cs(polys):
 def diamond(cx, cy, h):
     return Polygon([(cx, cy + h), (cx + h, cy), (cx, cy - h), (cx - h, cy)])
 
-def text_poly(s, height):
+def text_poly(s, height, y=None, size_by_font=False, max_w=None, mirror=False):
     fp = FontProperties(family="DejaVu Sans", weight="bold")
     tp = TextPath((0, 0), s, size=10, prop=fp)
     polys = []
@@ -60,12 +66,17 @@ def text_poly(s, height):
     shape = Polygon()
     for p in polys:
         shape = shape.difference(p) if shape.contains(p) else shape.union(p)
-    minx, miny, maxx, maxy = shape.bounds
-    k = height / (maxy - miny)
     from shapely import affinity
-    shape = affinity.scale(shape, k, k, origin=(0, 0))
     minx, miny, maxx, maxy = shape.bounds
-    return affinity.translate(shape, -(minx + maxx) / 2, TEXT_Y - (miny + maxy) / 2)
+    # size_by_font: scale so capital letters are `height` tall (keeps "=" in proportion)
+    k = height / (7.29 if size_by_font else (maxy - miny))
+    if max_w and (maxx - minx) * k > max_w:
+        k = max_w / (maxx - minx)
+    shape = affinity.scale(shape, -k if mirror else k, k, origin=(0, 0))
+    minx, miny, maxx, maxy = shape.bounds
+    if size_by_font:   # centre on the cap-height band, not the glyph box
+        return affinity.translate(shape, -(minx + maxx) / 2, (TEXT_Y if y is None else y) - 3.645 * k)
+    return affinity.translate(shape, -(minx + maxx) / 2, (TEXT_Y if y is None else y) - (miny + maxy) / 2)
 
 def extrude(cs, z0, h):
     return cs.extrude(h).translate([0, 0, z0])
@@ -99,9 +110,15 @@ inner_d = diamond(0, EMB_Y, INNER_HALF)
 gap_ring = diamond(0, EMB_Y, INNER_HALF + GAP).difference(inner_d)
 gold += extrude(poly_to_cs(gap_ring), BASE - 0.01, EMB_H + 0.01)
 
+# ---- back inlay (cut out of gold, filled by the blue part) ----
+back_txt = unary_union([text_poly(t, BACK_CAP_H, y=y, size_by_font=True, max_w=BACK_MAX_W, mirror=True)
+                        for t, y in BACK_LINES])
+back = extrude(poly_to_cs(back_txt), 0, BACK_DEPTH)
+gold -= back.translate([0, 0, -0.01]) + back   # clean cut through the bottom face
+
 # ---- blue diamond frame ----
 frame = outer_d.difference(diamond(0, EMB_Y, INNER_HALF + GAP))
-blue = extrude(poly_to_cs(frame), BASE, EMB_H)
+blue = extrude(poly_to_cs(frame), BASE, EMB_H) + back
 
 # ---- light-blue inner diamond ----
 light = extrude(poly_to_cs(inner_d), BASE, EMB_H)
@@ -120,6 +137,8 @@ scene = trimesh.Scene()
 for name, m in parts.items():
     tm = to_trimesh(m)
     assert tm.is_watertight, name
+    if name != "gold":   # parts must not overlap each other
+        assert (m ^ gold).volume() < 1e-3, name
     tm.export(os.path.join(here, f"medallion_{name}.stl"))
     tm.visual.face_colors = colors[name]
     scene.add_geometry(tm, node_name=name, geom_name=name)
