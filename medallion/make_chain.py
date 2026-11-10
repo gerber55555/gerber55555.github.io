@@ -31,8 +31,8 @@ FOOT = 1.6              # bridge foot length
 H = RH + GAP            # bridge underside height over the flat links
 CLEAR = 0.45            # extra run so the ramp clears the bar corner
 
-RING_ID = 9.0           # toggle ring inner diameter
-TBAR_LEN, TBAR_W = 19.0, 2.6   # toggle bar (length across, along-chain width)
+RING_ID = 10.0          # toggle ring inner diameter
+TBAR_LEN, TBAR_W = 21.0, 2.6   # toggle bar (length across, along-chain width)
 SEG = 48
 
 P = LO + S              # pitch: one flat link + one bridge

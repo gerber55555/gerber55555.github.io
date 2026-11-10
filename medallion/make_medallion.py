@@ -37,8 +37,10 @@ BACK_LINES = [("STATUS", 9.5), ("=", 0.0), ("SUCCESS", -9.5)]   # (text, centre 
 BACK_CAP_H = 6.0                # capital letter height
 BACK_MAX_W = 34.0               # longest line is shrunk to fit this width
 BACK_DEPTH = 0.2                # inlay depth = your first-layer height (use 0.4 for two layers)
-BAIL_OR, BAIL_HOLE = 5.8, 2.6   # bail outer radius / hole radius (5.2 mm hole)
-BAIL_CY = R + 3.4               # bail centre (overlaps the disc)
+# bail = a toggle ring, same size as the chain's, so a chain T-bar clips straight into it
+BAIL_HOLE = 5.0                 # hole radius (10 mm hole)
+BAIL_OR = BAIL_HOLE + 2.4       # 2.4 mm wall
+BAIL_CY = R + BAIL_HOLE + 0.6   # hole stays just clear of the disc edge
 SEG = 128
 
 def poly_to_cs(polys):
