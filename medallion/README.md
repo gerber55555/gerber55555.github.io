@@ -26,16 +26,20 @@ Without a multi-colour printer: swap filament manually after layer 1 (blue, then
 
 | File | Use |
 |---|---|
-| `chain_plate.stl` | Both pieces on one plate, laid diagonally (307 × 307 mm, for a 350 × 350 mm bed) |
-| `chain_segment.stl` | One piece (397 mm long; it only fits a 350 mm bed diagonally) |
-| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`) |
+| `chain_plate.3mf` | Both pieces with gold and blue parts, for AMS/MMU printers (**use this for blue logo links**) |
+| `chain_plate_gold.stl`, `chain_plate_blue.stl` | The same two colours as separate STLs (shared coordinates) |
+| `chain_plate.stl` | Both pieces, single colour (306 × 306 mm, laid diagonally for a 350 × 350 mm bed) |
+| `chain_segment.stl` | One piece (396 mm long; it only fits a 350 mm bed diagonally) |
+| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`, `LOGO_LINKS`) |
 
 ![chain](chain_preview.png)
 ![plate](chain_plate_preview.png)
 
 This is the necklace itself: about 77 cm (30 in) long, long enough to pull over your head, with a clasp so you
-don't have to. It prints flat and already linked, with no supports. Flat links lie on the bed and solid bridge
-links arch over them on 45° ramps. It comes as two pieces. Each starts with a toggle ring and ends with a T-bar,
+don't have to. It prints flat and already linked, with no supports. Flat links lie on the bed and solid gold bridge
+links arch over them on 45° ramps. Every other flat link is a 20 mm blue diamond, the same logo as on the medallion
+(12 per piece, 24 in all). Set `LOGO_LINKS = False` for an all-gold chain.
+It comes as two pieces. Each starts with a toggle ring and ends with a T-bar,
 so the necklace has exactly two joints: the clasp at the back and the medallion's joint at the front.
 
 For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
