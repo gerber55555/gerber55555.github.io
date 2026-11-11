@@ -9,8 +9,8 @@ A 50 mm wearable pendant with a raised rim, a diamond emblem and raised "Jira" t
 
 | File | Use |
 |---|---|
-| `medallion.3mf` | Gold, blue and light-blue parts in one file for AMS/MMU printers (**use this for the blue diamond, "Jira" text and back text**) |
-| `medallion_gold.stl`, `medallion_blue.stl`, `medallion_lightblue.stl` | The same parts as separate STLs (shared coordinates; load together as one multi-part object) |
+| `medallion.3mf` | Gold and blue parts in one file for AMS/MMU printers (**use this for the blue diamond, "Jira" text and back text**) |
+| `medallion_gold.stl`, `medallion_blue.stl` | The same parts as separate STLs (shared coordinates; load together as one multi-part object) |
 | `medallion.stl` | Single-colour, one-piece print (back text is not cut in) |
 | `make_medallion.py` | Parametric source |
 
@@ -20,7 +20,7 @@ A 50 mm wearable pendant with a raised rim, a diamond emblem and raised "Jira" t
 The back text is a 0.2 mm inlay, so it is exactly the **first layer** and comes out blue on the bed side.
 Set your first-layer height to 0.2 mm (or change `BACK_DEPTH` to match yours, e.g. 0.4 for two layers if gold shows through).
 A textured or smooth PEI plate gives the back its finish.
-Without a multi-colour printer: swap filament manually after layer 1 (blue, then gold), and again at 3.2 mm for a coloured diamond.
+Without a multi-colour printer: swap filament manually after layer 1 (blue, then gold), and again at 3.2 mm so the diamond and "Jira" come out blue (the rim and inner ring will be blue too).
 
 ## Chain
 

@@ -3,9 +3,8 @@
 Outputs (in this folder):
   medallion.stl          - single-colour, one-piece print
   medallion_gold.stl     - gold body (disc, rims, bail)   } multi-colour parts,
-  medallion_blue.stl     - dark-blue diamond frame, front 'Jira' text, back inlay text             } all share the same
-  medallion_lightblue.stl- light-blue inner diamond             } coordinates
-  medallion.3mf          - all three parts in one file for AMS/MMU printers
+  medallion_blue.stl     - blue diamond frame, front 'Jira' text, back inlay text } (same coordinates)
+  medallion.3mf          - both parts in one file for AMS/MMU printers
 
 Requires: pip install manifold3d trimesh shapely matplotlib numpy
 All dimensions in millimetres. Prints flat, face up, no supports.
@@ -27,8 +26,7 @@ RIM_W, RIM_H = 2.2, 1.2         # raised outer rim
 RING_R, RING_W, RING_H = 20.6, 0.8, 0.6   # thin decorative inner ring
 EMB_Y, EMB_HALF = 6.0, 11.0     # diamond emblem centre y and half-diagonal
 EMB_H = 1.6                     # emblem height above base
-INNER_HALF = 5.4                # inner light diamond half-diagonal
-GAP = 0.8                       # gold gap between frame and inner diamond
+HOLE_HALF = 6.2                 # half-diagonal of the open centre (gold face shows through)
 TEXT = "Jira"
 TEXT_H, TEXT_Y, TEXT_RAISE = 9.0, -13.0, 1.2
 # back: "STATUS = SUCCESS" inlaid into the bottom face, printed in blue in the first layer.
@@ -108,9 +106,6 @@ front_text = extrude(poly_to_cs(txt), BASE, TEXT_RAISE)
 
 # gold gap ring around the inner diamond, raised to emblem height (so it reads as an outline)
 outer_d = diamond(0, EMB_Y, EMB_HALF)
-inner_d = diamond(0, EMB_Y, INNER_HALF)
-gap_ring = diamond(0, EMB_Y, INNER_HALF + GAP).difference(inner_d)
-gold += extrude(poly_to_cs(gap_ring), BASE - 0.01, EMB_H + 0.01)
 
 # ---- back inlay (cut out of gold, filled by the blue part) ----
 back_txt = unary_union([text_poly(t, BACK_CAP_H, y=y, size_by_font=True, max_w=BACK_MAX_W, mirror=True)
@@ -119,22 +114,20 @@ back = extrude(poly_to_cs(back_txt), 0, BACK_DEPTH)
 gold -= back.translate([0, 0, -0.01]) + back   # clean cut through the bottom face
 
 # ---- blue diamond frame ----
-frame = outer_d.difference(diamond(0, EMB_Y, INNER_HALF + GAP))
+frame = outer_d.difference(diamond(0, EMB_Y, HOLE_HALF))
 blue = extrude(poly_to_cs(frame), BASE, EMB_H) + front_text + back
 
-# ---- light-blue inner diamond ----
-light = extrude(poly_to_cs(inner_d), BASE, EMB_H)
 
 def to_trimesh(m):
     mesh = m.to_mesh()
     return trimesh.Trimesh(vertices=np.asarray(mesh.vert_properties)[:, :3],
-                           faces=np.asarray(mesh.tri_verts), process=True)
+                           faces=np.asarray(mesh.tri_verts), process=False)
 
 import os
 here = os.path.dirname(os.path.abspath(__file__))
-parts = {"gold": gold, "blue": blue, "lightblue": light}
+parts = {"gold": gold, "blue": blue}
 colors = {"gold": [212, 175, 55, 255], "blue": [30, 70, 200, 255],
-          "lightblue": [120, 170, 255, 255]}
+}
 scene = trimesh.Scene()
 for name, m in parts.items():
     tm = to_trimesh(m)
@@ -146,7 +139,15 @@ for name, m in parts.items():
     scene.add_geometry(tm, node_name=name, geom_name=name)
 scene.export(os.path.join(here, "medallion.3mf"))
 
-single = to_trimesh(gold + blue + light)
+# one-piece version: the blue parts only touch the gold, so add thin overlaps to fuse them into one solid
+fuse = (extrude(poly_to_cs(txt), BASE - 0.1, 0.2) + extrude(poly_to_cs(frame), BASE - 0.1, 0.2)
+        + extrude(poly_to_cs(back_txt), 0.1, 0.2))
+one = gold + blue + fuse
+# boolean ops on the coplanar inlay leave a few zero-volume slivers; drop them
+one = max(one.decompose(), key=lambda c: c.volume())
+assert abs(one.volume() - (gold + blue + fuse).volume()) < 1e-3
+assert len(one.decompose()) == 1, "single-colour model is not one fused solid"
+single = to_trimesh(one)
 assert single.is_watertight
 single.export(os.path.join(here, "medallion.stl"))
 print("bounds (mm):", single.bounds.round(2).tolist(), "volume cm3:", round(single.volume / 1000, 2))
