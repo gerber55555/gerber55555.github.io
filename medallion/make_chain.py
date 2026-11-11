@@ -18,8 +18,10 @@ import trimesh
 from manifold3d import Manifold, CrossSection, JoinType
 
 # ---------------- parameters (mm) ----------------
-NECKLACE_LEN = 620      # total length when closed (~24 in)
-SEGMENTS = 4            # pieces; each must fit on your bed (~155 mm each at 620/4)
+NECKLACE_LEN = 760      # total length when closed (~30 in)
+SEGMENTS = 2            # pieces: 2 = clasp at the back + medallion joint at the front
+BED = (350, 350)        # print bed (mm); pieces are laid diagonally if they don't fit straight
+BED_MARGIN = 10         # keep this far from the bed edges
 GAP = 0.5               # print-in-place clearance (0.4-0.6 typical)
 
 LO, WO = 14.0, 8.5      # flat link outer length / width
@@ -96,6 +98,8 @@ seg_target = NECKLACE_LEN / SEGMENTS + RING_ID
 n = 1
 while segment(n + 1)[1] <= seg_target:
     n += 1
+if abs(segment(n + 1)[1] - seg_target) < abs(segment(n)[1] - seg_target):
+    n += 1          # pick the link count closest to the requested length
 seg, seg_len = segment(n)
 
 def to_trimesh(m):
@@ -109,7 +113,24 @@ t.export(os.path.join(here, "chain_segment.stl"))
 plate = seg
 for k in range(1, SEGMENTS):
     plate += seg.translate([0, k * (TBAR_LEN + 3), 0])
+
+def centred(m):
+    lo, hi = np.array(m.bounding_box()[:3]), np.array(m.bounding_box()[3:])
+    c = (lo + hi) / 2
+    return m.translate([-c[0], -c[1], -lo[2]])
+
+def fits(m):
+    b = m.bounding_box()
+    return b[3] - b[0] <= BED[0] - 2 * BED_MARGIN and b[4] - b[1] <= BED[1] - 2 * BED_MARGIN
+
+plate = centred(plate)
+layout = "straight"
+if not fits(plate):
+    plate = centred(plate.rotate([0, 0, 45]))
+    layout = "diagonal"
+assert fits(plate), "pieces don't fit the bed - increase SEGMENTS"
 to_trimesh(plate).export(os.path.join(here, "chain_plate.stl"))
+b = plate.bounding_box()
 print(f"{n} flat links per piece, piece length {seg_len:.1f} mm, "
-      f"plate {seg_len:.0f} x {(SEGMENTS - 1) * (TBAR_LEN + 3) + TBAR_LEN:.0f} mm, "
+      f"plate {b[3] - b[0]:.0f} x {b[4] - b[1]:.0f} mm ({layout}), "
       f"approx necklace {SEGMENTS * (seg_len - RING_ID):.0f} mm")

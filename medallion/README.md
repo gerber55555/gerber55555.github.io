@@ -26,15 +26,19 @@ Without a multi-colour printer: swap filament manually after layer 1 (blue, then
 
 | File | Use |
 |---|---|
-| `chain_plate.stl` | All 4 pieces on one plate (157 × 93 mm) |
-| `chain_segment.stl` | One piece, if you want to print them separately |
-| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `GAP`) |
+| `chain_plate.stl` | Both pieces on one plate, laid diagonally (307 × 307 mm, for a 350 × 350 mm bed) |
+| `chain_segment.stl` | One piece (397 mm long; it only fits a 350 mm bed diagonally) |
+| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`) |
 
 ![chain](chain_preview.png)
+![plate](chain_plate_preview.png)
 
-The chain prints flat and already linked, with no supports. Flat links lie on the bed and solid bridge links arch
-over them on 45° ramps. Each piece starts with a toggle ring and ends with a T-bar, and four pieces clip together into
-a ~59 cm (23 in) necklace. One joint is the clasp you open to put it on.
+This is the necklace itself: about 77 cm (30 in) long, long enough to pull over your head, with a clasp so you
+don't have to. It prints flat and already linked, with no supports. Flat links lie on the bed and solid bridge
+links arch over them on 45° ramps. It comes as two pieces. Each starts with a toggle ring and ends with a T-bar,
+so the necklace has exactly two joints: the clasp at the back and the medallion's joint at the front.
+
+For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
 
 **Print:** 0.2 mm layers, 100% infill or 4+ walls (the links are small), no brim on the links if you can avoid it.
 `GAP` is 0.5 mm; if links come out fused, raise it to 0.6 and re-run the script.
@@ -44,10 +48,10 @@ Right after printing, flex every link gently to break the links free.
 tilt it about 45° so the bar and the link behind it pass through together, then let the bar turn crosswise.
 Under tension it lies across the ring and can't pull back out.
 
-1. Clip the four pieces into one long strand (3 joints).
-2. Pick the joint that will sit at the front. Unclip it, push that T-bar through the **medallion's loop** first,
-   then through the ring, and let it turn crosswise. The medallion now hangs from that joint.
-3. The two loose ends are the clasp: clip that T-bar into that ring around your neck.
+1. Take piece A's T-bar, push it through the **medallion's loop**, then through piece B's ring, and let it turn
+   crosswise. That joint, with the medallion on it, is the front.
+2. The other T-bar and ring are the clasp at the back: clip them together around your neck (or leave it closed and
+   pull it over your head).
 
 ## Regenerate
 
