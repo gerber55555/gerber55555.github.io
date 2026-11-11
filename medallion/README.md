@@ -9,7 +9,7 @@ A 50 mm wearable pendant with a raised rim, a diamond emblem and raised "Jira" t
 
 | File | Use |
 |---|---|
-| `medallion.3mf` | Gold, blue and light-blue parts in one file for AMS/MMU printers (**use this for the blue back text**) |
+| `medallion.3mf` | Gold, blue and light-blue parts in one file for AMS/MMU printers (**use this for the blue diamond, "Jira" text and back text**) |
 | `medallion_gold.stl`, `medallion_blue.stl`, `medallion_lightblue.stl` | The same parts as separate STLs (shared coordinates; load together as one multi-part object) |
 | `medallion.stl` | Single-colour, one-piece print (back text is not cut in) |
 | `make_medallion.py` | Parametric source |

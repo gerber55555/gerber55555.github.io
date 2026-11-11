@@ -2,8 +2,8 @@
 
 Outputs (in this folder):
   medallion.stl          - single-colour, one-piece print
-  medallion_gold.stl     - gold body (disc, rims, text, bail)   } multi-colour parts,
-  medallion_blue.stl     - dark-blue diamond frame + back inlay text             } all share the same
+  medallion_gold.stl     - gold body (disc, rims, bail)   } multi-colour parts,
+  medallion_blue.stl     - dark-blue diamond frame, front 'Jira' text, back inlay text             } all share the same
   medallion_lightblue.stl- light-blue inner diamond             } coordinates
   medallion.3mf          - all three parts in one file for AMS/MMU printers
 
@@ -102,9 +102,9 @@ bail_body = extrude(bail, 0, BASE)
 gold = (gold + bail_body) - Manifold.cylinder(20, BAIL_HOLE, BAIL_HOLE, 64).translate([0, BAIL_CY, -5])
 # keep the hole clean through the rim area too (rim overlaps the bail)
 
-# raised text
+# raised text (printed in blue - added to the blue part below)
 txt = text_poly(TEXT, TEXT_H)
-gold += extrude(poly_to_cs(txt), BASE - 0.01, TEXT_RAISE + 0.01)
+front_text = extrude(poly_to_cs(txt), BASE, TEXT_RAISE)
 
 # gold gap ring around the inner diamond, raised to emblem height (so it reads as an outline)
 outer_d = diamond(0, EMB_Y, EMB_HALF)
@@ -120,7 +120,7 @@ gold -= back.translate([0, 0, -0.01]) + back   # clean cut through the bottom fa
 
 # ---- blue diamond frame ----
 frame = outer_d.difference(diamond(0, EMB_Y, INNER_HALF + GAP))
-blue = extrude(poly_to_cs(frame), BASE, EMB_H) + back
+blue = extrude(poly_to_cs(frame), BASE, EMB_H) + front_text + back
 
 # ---- light-blue inner diamond ----
 light = extrude(poly_to_cs(inner_d), BASE, EMB_H)
