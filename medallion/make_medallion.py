@@ -19,26 +19,28 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 # ---------------- parameters ----------------
-R = 25.0            # medallion radius (50 mm diameter)
-BASE = 3.2          # base disc thickness
-CHAMFER = 0.6       # bevel on the front edge
-RIM_W, RIM_H = 2.2, 1.2         # raised outer rim
-RING_R, RING_W, RING_H = 20.6, 0.8, 0.6   # thin decorative inner ring
-EMB_Y, EMB_HALF = 6.0, 11.0     # diamond emblem centre y and half-diagonal
-EMB_H = 1.6                     # emblem height above base
-HOLE_HALF = 6.2                 # half-diagonal of the open centre (gold face shows through)
+DIAMETER = 75.0     # overall disc diameter; all face artwork scales with it
+K = DIAMETER / 50.0 # scale factor relative to the original 50 mm design
+R = DIAMETER / 2
+BASE = 3.6          # base disc thickness
+CHAMFER = 0.8       # bevel on the front edge
+RIM_W, RIM_H = 2.2 * K, 1.5                 # raised outer rim
+RING_R, RING_W, RING_H = 20.6 * K, 0.8 * K, 0.6   # thin decorative inner ring
+EMB_Y, EMB_HALF = 6.0 * K, 11.0 * K         # diamond emblem centre y and half-diagonal
+EMB_H = 2.0                                 # emblem height above base
+HOLE_HALF = 6.2 * K                         # half-diagonal of the open centre (gold face shows through)
 TEXT = "Jira"
-TEXT_H, TEXT_Y, TEXT_RAISE = 9.0, -13.0, 1.2
+TEXT_H, TEXT_Y, TEXT_RAISE = 9.0 * K, -13.0 * K, 1.5
 # back: "STATUS = SUCCESS" inlaid into the bottom face, printed in blue in the first layer.
 # Text is mirrored in the model so it reads correctly when you turn the medallion over.
-BACK_LINES = [("STATUS", 9.5), ("=", 0.0), ("SUCCESS", -9.5)]   # (text, centre y)
-BACK_CAP_H = 6.0                # capital letter height
-BACK_MAX_W = 34.0               # longest line is shrunk to fit this width
+BACK_LINES = [("STATUS", 9.5 * K), ("=", 0.0), ("SUCCESS", -9.5 * K)]   # (text, centre y)
+BACK_CAP_H = 6.0 * K            # capital letter height
+BACK_MAX_W = 34.0 * K           # longest line is shrunk to fit this width
 BACK_DEPTH = 0.2                # inlay depth = your first-layer height (use 0.4 for two layers)
 # bail = a toggle ring, same size as the chain's, so a chain T-bar clips straight into it
-BAIL_HOLE = 5.0                 # hole radius (10 mm hole)
-BAIL_OR = BAIL_HOLE + 2.4       # 2.4 mm wall
-BAIL_CY = R + BAIL_HOLE + 0.6   # hole stays just clear of the disc edge
+BAIL_HOLE = 5.0                 # hole radius (10 mm hole) - keep matching the chain's RING_ID
+BAIL_OR = BAIL_HOLE + 3.0       # 3 mm wall for the heavier medallion
+BAIL_CY = R + BAIL_HOLE + 0.8   # hole stays just clear of the disc edge
 SEG = 128
 
 def poly_to_cs(polys):
