@@ -82,7 +82,7 @@ Under tension it lies across the ring and can't pull back out.
 | `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (253 × 253 mm) |
 | `hype_plate_gold.stl`, `hype_plate_blue.stl` | Same two colours as separate STLs |
 | `hype_plate.stl` | Single colour |
-| `hype_test.3mf` / `hype_test.stl` | Test print (127 × 40 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
+| `hype_test.3mf` / `hype_test.stl` | Test print (127 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
 | `make_hype_chain.py` | Parametric source (`LOOP_LEN`, `MAX_JOINT_DEG`, `BED`) |
 
 The chain prints as one closed loop of about 77 cm (30 in): 54 links, alternating gold and blue diamonds,
@@ -90,6 +90,13 @@ with no clasp, so it goes over your head. The medallion prints in the middle. A 
 linked through both: it is an upright loop whose bottom rod runs through a tunnel under the inner rail of the wider
 gold "bail link" at the top of the chain and a tunnel under the top of the medallion's loop. The medallion comes off
 the bed already hanging from the chain.
+
+**Hanging it:** on the plate the medallion sits inside the loop, so when you put the necklace on it starts out pointing up
+at your neck. It swings down by flipping over the chain (about 180°). The bail is long (about 21 mm, with a 45° roof
+so it prints without supports) so the medallion's loop clears the bail link on the way over; `make_hype_chain.py --swing`
+simulates the whole swing and checks nothing collides. Because it flips, the medallion's front ends up facing the same
+way as the chain's **underside** (the side that was on the bed). So wear the chain bed-side out; the chain looks the same
+from both sides.
 
 The chain is laid out as a rounded square. Each joint on the corners is bent 8.5°; the parts were checked to keep
 0.3 mm clearance up to 11°. For that, the channel down the middle of the diamonds is a bit wider than on the
@@ -99,7 +106,8 @@ can't slide free.
 ![hype test](hype_test_preview.png)
 
 Print `hype_test` first. Check that the links bend freely (including the bent ones at the ends), that the bail
-moves freely through the bail link and the loop copy, and that nothing is fused.
+moves freely through the bail link and the loop copy, that the loop copy can flip all the way over the chain,
+and that nothing is fused.
 
 ## Regenerate
 
@@ -107,5 +115,5 @@ moves freely through the bail link and the loop copy, and that nothing is fused.
 pip install manifold3d trimesh shapely matplotlib networkx lxml
 python3 make_medallion.py
 python3 make_chain.py
-python3 make_hype_chain.py
+python3 make_hype_chain.py           # add --swing to also simulate the medallion swinging down
 ```

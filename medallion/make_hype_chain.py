@@ -214,6 +214,28 @@ def check(links, conns, med_parts, bail, bail_link_idx, closed=True):
                        for t in np.arange(0.25, 40, 0.25) for n in nb), f"part {idx} can slide free"
 
 
+def check_swing(step=2):
+    """Slow (a few minutes). Lift the medallion and bail together and swing them over the chain about the
+    bail link's inner rail, from where they print (0 deg) to hanging down the other side (180 deg). At each
+    step the bail may slide/lift a little (it is a long loop) - the pose must change smoothly and never
+    touch the chain."""
+    y_top = half + RC
+    ax_y, ax_z = y_top - WO_B / 2 + C.RW / 2, C.HB + C.TB / 2
+    near = [p for p in links + conns if p.bounding_box()[4] > y_top - 140]
+    swing = bail + med_gold + med_blue
+
+    def pose(th, dy, dz):
+        return (swing.translate([0, -ax_y, -ax_z]).rotate([-th, 0, 0])
+                .translate([0, ax_y + dy, ax_z + dz]))
+    prev = (0.0, 0.0)
+    for th in range(0, 181, step):
+        cand = [(prev[0] + dy, prev[1] + dz) for dy in np.arange(-1.5, 1.6, 0.5) for dz in np.arange(-1.5, 1.6, 0.5)]
+        ok = [c for c in cand if all((pose(th, *c) ^ p).volume() < 1e-6 for p in near)]
+        assert ok, f"medallion can't swing past {th} deg"
+        prev = min(ok, key=lambda c: (c[0] - prev[0]) ** 2 + (c[1] - prev[1]) ** 2)
+    print("swing check: medallion swings freely 0 -> 180 deg over the chain")
+
+
 def to_trimesh(m, col):
     mesh = m.to_mesh()
     t = trimesh.Trimesh(np.asarray(mesh.vert_properties)[:, :3], np.asarray(mesh.tri_verts), process=False)
@@ -253,4 +275,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys
     main()
+    if "--swing" in sys.argv:
+        check_swing()
