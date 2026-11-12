@@ -28,23 +28,31 @@ Without a multi-colour printer: swap filament manually after layer 1 (blue, then
 |---|---|
 | `chain_plate.3mf` | Both pieces with gold and blue parts, for AMS/MMU printers (**use this for blue logo links**) |
 | `chain_plate_gold.stl`, `chain_plate_blue.stl` | The same two colours as separate STLs (shared coordinates) |
-| `chain_plate.stl` | Both pieces, single colour (306 × 306 mm, laid diagonally for a 350 × 350 mm bed) |
-| `chain_segment.stl` | One piece (396 mm long; it only fits a 350 mm bed diagonally) |
+| `chain_plate.stl` | Both pieces, single colour (300 × 300 mm, laid diagonally for a 350 × 350 mm bed) |
+| `chain_segment.stl` | One piece (387 mm long; it only fits a 350 mm bed diagonally) |
 | `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`, `LOGO_LINKS`) |
 
 ![chain](chain_preview.png)
 ![plate](chain_plate_preview.png)
 
-This is the necklace itself: about 77 cm (30 in) long, long enough to pull over your head, with a clasp so you
-don't have to. It prints flat and already linked, with no supports. Flat links lie on the bed and solid gold bridge
-links arch over them on 45° ramps. Every other flat link is a 20 mm blue diamond, the same logo as on the medallion
-(12 per piece, 24 in all). Set `LOGO_LINKS = False` for an all-gold chain.
+This is the necklace itself: about 75 cm (30 in) long, long enough to pull over your head, with a clasp so you
+don't have to. It prints flat and already linked, with no supports, about 6 mm thick.
+
+**How it holds together:** flat links lie on the bed and alternate between gold rectangles and 20 mm blue diamonds
+(the medallion's logo; 13 per piece). Each end bar of a flat link is a small arch with a tunnel under it. Between
+every pair of flat links is a gold connector: a closed loop standing upright whose bottom rod runs through the two
+tunnels and whose top bar arches over the two end bars. So every end bar passes *through* a closed loop, just like
+the links of a normal chain. The script checks that every connector and link is trapped in every direction, not just
+that the parts don't touch. The only overhangs are short (~6 mm) flat bridges.
+Set `LOGO_LINKS = False` for an all-gold chain.
+
 It comes as two pieces. Each starts with a toggle ring and ends with a T-bar,
 so the necklace has exactly two joints: the clasp at the back and the medallion's joint at the front.
 
 For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
 
-**Print:** 0.2 mm layers, 100% infill or 4+ walls (the links are small), no brim on the links if you can avoid it.
+**Print:** 0.2 mm layers, 100% infill or 4+ walls (the links are small), no brim, good bridging/cooling settings.
+Print a short test piece first (`NECKLACE_LEN = 150`, `SEGMENTS = 1`).
 `GAP` is 0.5 mm; if links come out fused, raise it to 0.6 and re-run the script.
 Right after printing, flex every link gently to break the links free.
 

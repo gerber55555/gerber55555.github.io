@@ -1,19 +1,25 @@
-"""Print-in-place chain with toggle clasps, sized for the medallion.
+"""Print-in-place interlocking chain with toggle clasps, sized for the medallion.
 
-The chain prints flat, already linked, with no supports. It has two kinds of link:
-  * flat links  - lying on the bed; they alternate between gold rounded rectangles
-                  and blue diamond "logo" links matching the medallion's emblem
-  * bridges     - solid staples whose feet sit inside neighbouring flat links
-                  and arch (45 degree ramps, self-supporting) over their end bars
+The chain prints flat, already linked, with no supports. Two kinds of link alternate:
+  * flat links   - lying on the bed: gold rounded rectangles alternating with blue
+                   diamond "logo" links that match the medallion's emblem. Each end
+                   bar is a small arch with a tunnel underneath.
+  * connectors   - gold closed rectangular loops standing upright. The bottom rod
+                   runs along the bed through the tunnels of two neighbouring flat
+                   links, the posts rise inside their openings, and the top bar arches
+                   over their end bars. Each flat link's end bar therefore passes
+                   through a closed connector loop, so the links are truly interlocked.
+The only overhangs are short (~6 mm) bridges, so no supports are needed.
+
 Bed space limits one piece, so the necklace is SEGMENTS pieces. Each piece starts
-with a toggle RING and ends with a toggle T-BAR, so pieces clip together, and the
-last joint is the clasp you open to put it on. To hang the medallion, feed a
-T-bar through its loop before clipping that T-bar into the next ring.
+with a toggle RING and ends with a toggle T-BAR, so pieces clip together, and one
+joint is the clasp you open to put it on. To hang the medallion, feed a T-bar
+through its loop before clipping that T-bar into the next ring.
 
 Outputs: chain_plate.stl (all pieces, one colour), chain_plate.3mf (gold + blue parts
 for multi-colour printers), chain_plate_gold.stl / chain_plate_blue.stl (same parts as
 separate STLs) and chain_segment.stl (one piece).
-Requires: pip install manifold3d trimesh numpy
+Requires: pip install manifold3d trimesh numpy networkx lxml
 """
 import os
 import numpy as np
@@ -27,21 +33,28 @@ BED = (350, 350)        # print bed (mm); pieces are laid diagonally if they don
 BED_MARGIN = 10         # keep this far from the bed edges
 GAP = 0.5               # print-in-place clearance (0.4-0.6 typical)
 
-LO, WO = 14.0, 8.5      # flat link outer length / width
-RW, RH = 1.8, 2.0       # flat link rail width / height
+# connectors (gold, standing loops)
+BW = 3.5                # connector width across the chain
+TC = 1.4                # bottom rod height (runs through the tunnels)
+POST = 1.6              # post length along the chain
+BT = 2.0                # top bar thickness
+
+# flat links
+LO, WO = 14.0, 8.5      # gold link outer length / width
+RW = 1.8                # rail width
 S = 1.0                 # bed gap between consecutive flat links
-BW = 3.5                # bridge width
-BT = 2.0                # bridge vertical thickness
-FOOT = 1.6              # bridge foot length
-H = RH + GAP            # bridge underside height over the flat links
-CLEAR = 0.45            # extra run so the ramp clears the bar corner
+TB = 1.6                # thickness of the arched end bar above its tunnel
+HB = TC + GAP           # tunnel height under each end bar
+HL = HB + TB            # flat link height
+TUN = BW / 2 + GAP      # tunnel half-width
+TOP0 = HL + GAP         # underside of the connector's top bar
 
 # diamond "logo" links (every other flat link)
 LOGO_LINKS = True
 D_HALF = 10.0           # half-diagonal: 20 mm wide across the chain
-D_TIP = 2.4             # the along-chain points are blunted to this half-width (they sit under the bridges)
+D_TIP = 3.8             # the along-chain points are blunted to this half-width (room for the tunnel arch)
 D_HOLE = 0.56           # open centre as a fraction of the outer size (same look as the medallion)
-SLOT = BW / 2 + GAP + 0.05   # clearance channel for the bridge where it crosses the diamond's points
+SLOT = BW / 2 + GAP     # channel along the middle for the connector posts
 LD = 2 * (D_HALF - D_TIP)    # diamond link length along the chain
 
 RING_ID = 10.0          # toggle ring inner diameter
@@ -51,46 +64,47 @@ SEG = 48
 def box(x0, x1, y0, y1, z0, z1):
     return Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0])
 
+def tunnels(x0, x1):
+    """cut the tunnels under the end bars of a flat link spanning x0..x1"""
+    return (box(x0 - 1, x0 + RW + 0.6, -TUN, TUN, -1, HB)
+            + box(x1 - RW - 0.6, x1 + 1, -TUN, TUN, -1, HB))
+
 def flat_link(x0):
     r = 1.5
     outer = CrossSection.square([LO - 2 * r, WO - 2 * r]).translate([r, r - WO / 2]).offset(
         r, JoinType.Round, circular_segments=SEG)
     inner = CrossSection.square([LO - 2 * RW, WO - 2 * RW]).translate([RW, RW - WO / 2])
-    return (outer - inner).extrude(RH).translate([x0, 0, 0])
+    return (outer - inner).extrude(HL).translate([x0, 0, 0]) - tunnels(x0, x0 + LO)
 
 def diamond_link(x0):
-    """diamond frame, points blunted along the chain so each end is a straight bar like a flat link's"""
+    """diamond frame, points blunted along the chain so each end is a straight arched bar"""
+    x1 = x0 + LD
     cx = x0 + LD / 2
     def dia(h):
         return CrossSection([[(cx + h, 0), (cx, h), (cx - h, 0), (cx, -h)]])
     outer = dia(D_HALF) ^ CrossSection.square([LD, 2 * D_HALF + 2]).translate([x0, -D_HALF - 1])
-    inner = dia(D_HALF * D_HOLE) + CrossSection.square([LD - 2 * RW, 2 * SLOT]).translate([x0 + RW, -SLOT])
-    assert cx - D_HALF * D_HOLE >= x0 + RW, "diamond hole would cut through the end bar"
-    return (outer - inner).extrude(RH)
+    hole = dia(D_HALF * D_HOLE) ^ CrossSection.square([LD - 2 * RW, 2 * D_HALF]).translate([x0 + RW, -D_HALF])
+    inner = hole + CrossSection.square([LD - 2 * RW, 2 * SLOT]).translate([x0 + RW, -SLOT])
+    return (outer - inner).extrude(HL) - tunnels(x0, x1)
 
 def toggle_ring(x_end):
-    """round ring ending at x_end, placed so that under the bridge its rear rail sits where a flat link's does"""
+    """round ring ending at x_end; under the connector its rear rail sits where a flat link's bar does"""
     ri = RING_ID / 2
     ro = ri + RW
-    cx = x_end - RW - np.sqrt(ri ** 2 - (BW / 2) ** 2)
-    ring = CrossSection.circle(ro, SEG * 2) - CrossSection.circle(RING_ID / 2, SEG * 2)
-    return ring.extrude(RH).translate([cx, 0, 0]), cx - ro
+    cx = x_end - RW - np.sqrt(ri ** 2 - TUN ** 2)
+    ring = CrossSection.circle(ro, SEG * 2) - CrossSection.circle(ri, SEG * 2)
+    m = ring.extrude(HL).translate([cx, 0, 0])
+    m -= box(x_end - RW - 1.0, x_end + 1, -TUN, TUN, -1, HB)
+    return m, cx - ro
 
-def bridge(x_end, tbar=False):
-    """bridge from the flat link ending at x_end over the gap S to the next one"""
-    a = x_end - RW - CLEAR - H - FOOT          # front foot start
-    b = 2 * (x_end + S / 2) - a                # symmetric about the gap
-    rear_foot = TBAR_W if tbar else FOOT
+def connector(x_end, tbar=False):
+    """closed upright loop linking the flat link ending at x_end with the next one"""
+    a = x_end - RW - GAP - POST
+    b = x_end + S + RW + GAP + POST
+    loop = box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
     if tbar:
-        b = b - FOOT + TBAR_W
-    bottom = [(a, 0), (a + FOOT, 0), (a + FOOT + H, H),
-              (b - rear_foot - H, H), (b - rear_foot, 0), (b, 0)]
-    top = [(x, z + BT) for x, z in reversed(bottom)]
-    prof = CrossSection([bottom + top])                       # profile in (x, z)
-    m = prof.extrude(BW).rotate([90, 0, 0]).translate([0, BW / 2, 0])
-    if tbar:
-        m += box(b - TBAR_W, b, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
-    return m
+        loop += box(b - TBAR_W, b, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
+    return loop
 
 def union(ms):
     out = ms[0]
@@ -111,16 +125,16 @@ def segment(n_links, check=False):
         else:
             link = flat_link(x0); gold.append(link); ends.append(x0 + LO)
         order.append(link)
-    bridges = [bridge(e) for e in ends[:-1]] + [bridge(ends[-1], tbar=True)]
-    gold += bridges
-    if check:   # parts must not touch: each bridge vs every link, and links vs each other
-        for p in bridges:
+    conns = [connector(e) for e in ends[:-1]] + [connector(ends[-1], tbar=True)]
+    gold += conns
+    if check:
+        for c in conns:
             for q in order:
-                assert (p ^ q).volume() < 1e-6, "links overlap - increase GAP/CLEAR"
+                assert (c ^ q).volume() < 1e-6, "connector touches a link - increase GAP"
         for p, q in zip(order, order[1:]):
-            assert (p ^ q).volume() < 1e-6, "links overlap"
-        for p, q in zip(bridges, bridges[1:]):
-            assert (p ^ q).volume() < 1e-6, "bridges overlap - links too short"
+            assert (p ^ q).volume() < 1e-6, "links touch"
+        for p, q in zip(conns, conns[1:]):
+            assert (p ^ q).volume() < 1e-6, "connectors touch - links too short"
     g = union(gold).translate([-start, 0, 0])
     bl = union(blue).translate([-start, 0, 0]) if blue else None
     length = (g + bl if bl else g).bounding_box()[3]
