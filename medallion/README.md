@@ -87,7 +87,7 @@ Under tension it lies across the ring and can't pull back out.
 
 The chain prints as one closed loop that fills the bed: about 105 cm (41 in), 74 links alternating gold and blue diamonds,
 with no clasp, so it goes over your head. Set `FILL_BED = False` and `LOOP_LEN` for a shorter loop
-(e.g. 760 for 30 in). The medallion prints in the middle at 195 mm (7.7 in) across; the separate `medallion.*` files stay 100 mm.
+(e.g. 760 for 30 in). The medallion prints in the middle at 160 mm (6.3 in) across; the separate `medallion.*` files stay 100 mm.
 Change `MEDALLION_SIZE` in `make_hype_chain.py` for another size, or set it to `"fill"` for the largest that fits
 inside the loop (257 mm on a 350 mm bed). A gold **bail** prints already
 linked through both: it is an upright loop whose bottom rod runs through a tunnel under the inner rail of the wider
