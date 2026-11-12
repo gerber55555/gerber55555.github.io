@@ -19,7 +19,10 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 # ---------------- parameters ----------------
-DIAMETER = 100.0    # overall disc diameter; all face artwork scales with it
+import os as _os
+# overall disc diameter; all face artwork scales with it. make_hype_chain.py overrides it (via the
+# MEDALLION_DIAMETER environment variable) to fill the space inside its chain loop.
+DIAMETER = float(_os.environ.get("MEDALLION_DIAMETER", 100.0))
 K = DIAMETER / 50.0 # scale factor relative to the original 50 mm design
 R = DIAMETER / 2
 BASE = 3.6          # base disc thickness

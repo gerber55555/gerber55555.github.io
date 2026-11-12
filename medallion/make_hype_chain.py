@@ -20,7 +20,6 @@ import trimesh
 from manifold3d import Manifold, CrossSection
 
 import make_chain as C
-import make_medallion as M
 
 # ---------------- parameters (mm) ----------------
 FILL_BED = True         # True: make the loop as big as the bed allows; False: use LOOP_LEN
@@ -30,6 +29,8 @@ BED = (350, 350)
 BED_MARGIN = 10
 C.SLOT = C.BW / 2 + C.GAP + 0.5   # wider channel in the diamonds so joints can bend on the corners
 WO_B = 13.0             # width of the bail link (wider gold link at the top centre)
+MEDALLION_SIZE = "fill" # "fill": as big as fits inside the loop; or a diameter in mm, e.g. 150
+MED_CLEAR = 4.0         # keep the medallion this far from the chain links
 G2 = 12.0               # gap between the bail link and the medallion's loop: long enough that the
                         # medallion can swing ~180 degrees over the chain to hang down when worn
 BAIL_RISE = 4.0         # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
@@ -105,6 +106,35 @@ def make_path(half, perim):
 
 
 path = make_path(half, perim)
+
+
+# ---------------- medallion size ----------------
+# bail geometry from make_medallion.py (independent of the medallion's diameter)
+BAIL_HOLE_, BAIL_OR_ = 5.0, 8.0
+
+
+def medallion_fits(d):
+    """does a medallion of diameter d, hung from the bail, stay MED_CLEAR inside the links?"""
+    r = d / 2
+    y_top = half + RC
+    ring_c = y_top - WO_B / 2 - G2 - BAIL_OR_
+    yc = ring_c - (r + BAIL_HOLE_ + 0.8)              # disc centre (BAIL_CY = R + hole + 0.8)
+    ss = np.linspace(0, perim, 4000, endpoint=False)
+    pts = np.array([path(t) for t in ss])
+    dist = np.min(np.hypot(pts[:, 0], pts[:, 1] - yc))  # loop is convex: nearest centre-line point
+    return dist >= r + C.D_HALF + MED_CLEAR
+
+
+if MEDALLION_SIZE == "fill":
+    lo_d, hi_d = 50.0, 2 * (half + RC)
+    while hi_d - lo_d > 0.5:
+        mid = (lo_d + hi_d) / 2
+        lo_d, hi_d = (mid, hi_d) if medallion_fits(mid) else (lo_d, mid)
+    os.environ["MEDALLION_DIAMETER"] = str(math.floor(lo_d))
+else:
+    assert medallion_fits(float(MEDALLION_SIZE)), "medallion too big for this loop"
+    os.environ["MEDALLION_DIAMETER"] = str(float(MEDALLION_SIZE))
+import make_medallion as M          # noqa: E402  (imported after its size is decided)
 
 
 def lay(kinds, path_fn, closed=True, bail_index=0):

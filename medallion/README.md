@@ -83,11 +83,13 @@ Under tension it lies across the ring and can't pull back out.
 | `hype_plate_gold.stl`, `hype_plate_blue.stl` | Same two colours as separate STLs |
 | `hype_plate.stl` | Single colour |
 | `hype_test.3mf` / `hype_test.stl` | Test print (125 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
-| `make_hype_chain.py` | Parametric source (`FILL_BED`, `LOOP_LEN`, `MAX_JOINT_DEG`, `BED`) |
+| `make_hype_chain.py` | Parametric source (`FILL_BED`, `LOOP_LEN`, `MEDALLION_SIZE`, `MAX_JOINT_DEG`, `BED`) |
 
 The chain prints as one closed loop that fills the bed: about 105 cm (41 in), 74 links alternating gold and blue diamonds,
 with no clasp, so it goes over your head. Set `FILL_BED = False` and `LOOP_LEN` for a shorter loop
-(e.g. 760 for 30 in). The medallion prints in the middle. A gold **bail** prints already
+(e.g. 760 for 30 in). The medallion prints in the middle and is sized to fill the space inside the loop: 257 mm (10 in) across on a
+350 mm bed. The separate `medallion.*` files stay 100 mm. Set `MEDALLION_SIZE` in `make_hype_chain.py` to a number
+(e.g. `150`) for a smaller one. A gold **bail** prints already
 linked through both: it is an upright loop whose bottom rod runs through a tunnel under the inner rail of the wider
 gold "bail link" at the top of the chain and a tunnel under the top of the medallion's loop. The medallion comes off
 the bed already hanging from the chain.
