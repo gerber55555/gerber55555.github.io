@@ -73,10 +73,39 @@ Under tension it lies across the ring and can't pull back out.
 2. The other T-bar and ring are the clasp at the back: clip them together around your neck (or leave it closed and
    pull it over your head).
 
+## Hype-chain plate (medallion + closed chain, one print)
+
+![hype plate](hype_preview.png)
+
+| File | Use |
+|---|---|
+| `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (253 × 253 mm) |
+| `hype_plate_gold.stl`, `hype_plate_blue.stl` | Same two colours as separate STLs |
+| `hype_plate.stl` | Single colour |
+| `hype_test.3mf` / `hype_test.stl` | Test print (127 × 40 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
+| `make_hype_chain.py` | Parametric source (`LOOP_LEN`, `MAX_JOINT_DEG`, `BED`) |
+
+The chain prints as one closed loop of about 77 cm (30 in): 54 links, alternating gold and blue diamonds,
+with no clasp, so it goes over your head. The medallion prints in the middle. A gold **bail** prints already
+linked through both: it is an upright loop whose bottom rod runs through a tunnel under the inner rail of the wider
+gold "bail link" at the top of the chain and a tunnel under the top of the medallion's loop. The medallion comes off
+the bed already hanging from the chain.
+
+The chain is laid out as a rounded square. Each joint on the corners is bent 8.5°; the parts were checked to keep
+0.3 mm clearance up to 11°. For that, the channel down the middle of the diamonds is a bit wider than on the
+straight chain. The script checks clearance between every pair of nearby parts and that the connectors and bail
+can't slide free.
+
+![hype test](hype_test_preview.png)
+
+Print `hype_test` first. Check that the links bend freely (including the bent ones at the ends), that the bail
+moves freely through the bail link and the loop copy, and that nothing is fused.
+
 ## Regenerate
 
 ```
 pip install manifold3d trimesh shapely matplotlib networkx lxml
 python3 make_medallion.py
 python3 make_chain.py
+python3 make_hype_chain.py
 ```

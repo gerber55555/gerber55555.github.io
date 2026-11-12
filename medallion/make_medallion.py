@@ -125,31 +125,36 @@ def to_trimesh(m):
     return trimesh.Trimesh(vertices=np.asarray(mesh.vert_properties)[:, :3],
                            faces=np.asarray(mesh.tri_verts), process=False)
 
-import os
-here = os.path.dirname(os.path.abspath(__file__))
-parts = {"gold": gold, "blue": blue}
-colors = {"gold": [212, 175, 55, 255], "blue": [30, 70, 200, 255],
-}
-scene = trimesh.Scene()
-for name, m in parts.items():
-    tm = to_trimesh(m)
-    assert tm.is_watertight, name
-    if name != "gold":   # parts must not overlap each other
-        assert (m ^ gold).volume() < 1e-3, name
-    tm.export(os.path.join(here, f"medallion_{name}.stl"))
-    tm.visual.face_colors = colors[name]
-    scene.add_geometry(tm, node_name=name, geom_name=name)
-scene.export(os.path.join(here, "medallion.3mf"))
+def main():
+    import os
+    here = os.path.dirname(os.path.abspath(__file__))
+    parts = {"gold": gold, "blue": blue}
+    colors = {"gold": [212, 175, 55, 255], "blue": [30, 70, 200, 255],
+    }
+    scene = trimesh.Scene()
+    for name, m in parts.items():
+        tm = to_trimesh(m)
+        assert tm.is_watertight, name
+        if name != "gold":   # parts must not overlap each other
+            assert (m ^ gold).volume() < 1e-3, name
+        tm.export(os.path.join(here, f"medallion_{name}.stl"))
+        tm.visual.face_colors = colors[name]
+        scene.add_geometry(tm, node_name=name, geom_name=name)
+    scene.export(os.path.join(here, "medallion.3mf"))
 
-# one-piece version: the blue parts only touch the gold, so add thin overlaps to fuse them into one solid
-fuse = (extrude(poly_to_cs(txt), BASE - 0.1, 0.2) + extrude(poly_to_cs(frame), BASE - 0.1, 0.2)
-        + extrude(poly_to_cs(back_txt), 0.1, 0.2))
-one = gold + blue + fuse
-# boolean ops on the coplanar inlay leave a few zero-volume slivers; drop them
-one = max(one.decompose(), key=lambda c: c.volume())
-assert abs(one.volume() - (gold + blue + fuse).volume()) < 1e-3
-assert len(one.decompose()) == 1, "single-colour model is not one fused solid"
-single = to_trimesh(one)
-assert single.is_watertight
-single.export(os.path.join(here, "medallion.stl"))
-print("bounds (mm):", single.bounds.round(2).tolist(), "volume cm3:", round(single.volume / 1000, 2))
+    # one-piece version: the blue parts only touch the gold, so add thin overlaps to fuse them into one solid
+    fuse = (extrude(poly_to_cs(txt), BASE - 0.1, 0.2) + extrude(poly_to_cs(frame), BASE - 0.1, 0.2)
+            + extrude(poly_to_cs(back_txt), 0.1, 0.2))
+    one = gold + blue + fuse
+    # boolean ops on the coplanar inlay leave a few zero-volume slivers; drop them
+    one = max(one.decompose(), key=lambda c: c.volume())
+    assert abs(one.volume() - (gold + blue + fuse).volume()) < 1e-3
+    assert len(one.decompose()) == 1, "single-colour model is not one fused solid"
+    single = to_trimesh(one)
+    assert single.is_watertight
+    single.export(os.path.join(here, "medallion.stl"))
+    print("bounds (mm):", single.bounds.round(2).tolist(), "volume cm3:", round(single.volume / 1000, 2))
+
+
+if __name__ == "__main__":
+    main()
