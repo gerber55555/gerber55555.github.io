@@ -29,7 +29,7 @@ BED = (350, 350)
 BED_MARGIN = 10
 C.SLOT = C.BW / 2 + C.GAP + 0.5   # wider channel in the diamonds so joints can bend on the corners
 WO_B = 13.0             # width of the bail link (wider gold link at the top centre)
-MEDALLION_SIZE = 130     # diameter in mm, or "fill" for as big as fits inside the loop (257 mm on a 350 mm bed)
+MEDALLION_SIZE = 195     # diameter in mm, or "fill" for as big as fits inside the loop (257 mm on a 350 mm bed)
 MED_CLEAR = 4.0         # keep the medallion this far from the chain links
 G2 = 12.0               # gap between the bail link and the medallion's loop: long enough that the
                         # medallion can swing ~180 degrees over the chain to hang down when worn
