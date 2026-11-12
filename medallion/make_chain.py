@@ -140,6 +140,22 @@ def segment(n_links, check=False):
     length = (g + bl if bl else g).bounding_box()[3]
     return g, bl, length
 
+def check_interlock():
+    """Sample of ring, gold link, diamond, gold link with their 3 connectors. Each connector is
+    slid up to 40 mm in 26 directions; it must hit one of its two links every time (it is trapped)."""
+    import itertools
+    e0 = LO; x1 = e0 + S; e1 = x1 + LO; x2 = e1 + S; e2 = x2 + LD; x3 = e2 + S
+    links = [toggle_ring(LO)[0], flat_link(x1), diamond_link(x2), flat_link(x3)]
+    conns = [connector(e0), connector(e1), connector(e2)]
+    dirs = [np.array(v, float) / np.linalg.norm(v) for v in itertools.product([-1, 0, 1], repeat=3) if any(v)]
+    for i, c in enumerate(conns):
+        for dv in dirs:
+            assert any((c.translate(list(dv * t)) ^ links[j]).volume() > 1e-6
+                       for t in np.arange(0.25, 40, 0.25) for j in (i, i + 1)), \
+                f"connector {i} can slide free along {dv.round(2)} - chain would fall apart"
+
+check_interlock()
+
 # ring-to-bar length per piece; each joint uses up roughly a ring diameter of overlap
 seg_target = NECKLACE_LEN / SEGMENTS + RING_ID
 n = 1
