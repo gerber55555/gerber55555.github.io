@@ -28,14 +28,14 @@ Without a multi-colour printer: swap filament manually after layer 1 (blue, then
 |---|---|
 | `chain_plate.3mf` | Both pieces with gold and blue parts, for AMS/MMU printers (**use this for blue logo links**) |
 | `chain_plate_gold.stl`, `chain_plate_blue.stl` | The same two colours as separate STLs (shared coordinates) |
-| `chain_plate.stl` | Both pieces, single colour (300 × 300 mm, laid diagonally for a 350 × 350 mm bed) |
-| `chain_segment.stl` | One piece (387 mm long; it only fits a 350 mm bed diagonally) |
+| `chain_plate.stl` | Both pieces, single colour (307 × 307 mm, laid diagonally for a 350 × 350 mm bed) |
+| `chain_segment.stl` | One piece (396 mm long; it only fits a 350 mm bed diagonally) |
 | `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`, `LOGO_LINKS`) |
 
 ![chain](chain_preview.png)
 ![plate](chain_plate_preview.png)
 
-This is the necklace itself: about 75 cm (30 in) long, long enough to pull over your head, with a clasp so you
+This is the necklace itself: about 77 cm (30 in) long, long enough to pull over your head, with a clasp so you
 don't have to. It prints flat and already linked, with no supports, about 6 mm thick.
 
 **How it holds together:** flat links lie on the bed and alternate between gold rectangles and 20 mm blue diamonds
@@ -46,7 +46,7 @@ the links of a normal chain. The script checks that every connector and link is 
 that the parts don't touch. The only overhangs are short (~6 mm) flat bridges.
 Set `LOGO_LINKS = False` for an all-gold chain.
 
-It comes as two pieces. Each starts with a toggle ring and ends with a T-bar,
+It comes as two pieces. Each starts with a toggle ring and ends with a 12 mm stem and a T-bar,
 so the necklace has exactly two joints: the clasp at the back and the medallion's joint at the front.
 
 For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
@@ -61,7 +61,7 @@ tilt it about 45° so the bar and the link behind it pass through together, then
 Under tension it lies across the ring and can't pull back out.
 
 1. Take piece A's T-bar, push it through the **medallion's loop**, then through piece B's ring, and let it turn
-   crosswise. That joint, with the medallion on it, is the front.
+   crosswise. The medallion's loop and the ring both ride on the stem. That joint, with the medallion on it, is the front.
 2. The other T-bar and ring are the clasp at the back: clip them together around your neck (or leave it closed and
    pull it over your head).
 

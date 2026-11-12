@@ -59,6 +59,8 @@ LD = 2 * (D_HALF - D_TIP)    # diamond link length along the chain
 
 RING_ID = 10.0          # toggle ring inner diameter
 TBAR_LEN, TBAR_W = 21.0, 2.6   # toggle bar (length across, along-chain width)
+STEM, STEM_H = 12.0, 3.0       # solid stem between the last link and the T-bar; the clasp ring and
+                               # the medallion's loop (3.5 + 3.6 mm thick) both ride on it
 SEG = 48
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -100,11 +102,15 @@ def toggle_ring(x_end):
 def connector(x_end, tbar=False):
     """closed upright loop linking the flat link ending at x_end with the next one"""
     a = x_end - RW - GAP - POST
-    b = x_end + S + RW + GAP + POST
+    if not tbar:
+        b = x_end + S + RW + GAP + POST
+        return box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
+    # end piece: loop around the last link's rear bar, then a stem, then the T-bar
+    b = x_end + GAP + POST
     loop = box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
-    if tbar:
-        loop += box(b - TBAR_W, b, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
-    return loop
+    stem = box(b - 0.5, b + STEM, -BW / 2, BW / 2, 0, STEM_H)
+    bar = box(b + STEM - TBAR_W, b + STEM, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
+    return loop + stem + bar
 
 def union(ms):
     out = ms[0]
@@ -147,11 +153,15 @@ def check_interlock():
     e0 = LO; x1 = e0 + S; e1 = x1 + LO; x2 = e1 + S; e2 = x2 + LD; x3 = e2 + S
     links = [toggle_ring(LO)[0], flat_link(x1), diamond_link(x2), flat_link(x3)]
     conns = [connector(e0), connector(e1), connector(e2)]
+    # end piece: T connector on the last link
+    links.append(flat_link(x3)); conns.append(connector(x3 + LO, tbar=True))
     dirs = [np.array(v, float) / np.linalg.norm(v) for v in itertools.product([-1, 0, 1], repeat=3) if any(v)]
+    pairs = [(0, 1), (1, 2), (2, 3), (4,)]
     for i, c in enumerate(conns):
+        assert all((c ^ l).volume() < 1e-6 for l in links), f"connector {i} touches a link"
         for dv in dirs:
             assert any((c.translate(list(dv * t)) ^ links[j]).volume() > 1e-6
-                       for t in np.arange(0.25, 40, 0.25) for j in (i, i + 1)), \
+                       for t in np.arange(0.25, 40, 0.25) for j in pairs[i]), \
                 f"connector {i} can slide free along {dv.round(2)} - chain would fall apart"
 
 check_interlock()
