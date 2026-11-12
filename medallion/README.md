@@ -51,8 +51,16 @@ so the necklace has exactly two joints: the clasp at the back and the medallion'
 
 For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
 
+**Test print first:** `chain_test.3mf` (two colours) or `chain_test.stl` (one colour), 84 × 46 mm, about 10–15 minutes.
+It's a short piece with the real ring, two gold links, two blue diamonds, the connectors, the stem and T-bar, plus a copy
+of the medallion's loop. After printing, check that:
+1. every link moves freely (flex each one; if any are fused, raise `GAP` to 0.6 and regenerate);
+2. the T-bar clips into the piece's own ring and won't pull back out;
+3. the T-bar and stem go through the loop copy, as they will on the medallion.
+
+![test](chain_test_preview.png)
+
 **Print:** 0.2 mm layers, 100% infill or 4+ walls (the links are small), no brim, good bridging/cooling settings.
-Print a short test piece first (`NECKLACE_LEN = 150`, `SEGMENTS = 1`).
 `GAP` is 0.5 mm; if links come out fused, raise it to 0.6 and re-run the script.
 Right after printing, flex every link gently to break the links free.
 

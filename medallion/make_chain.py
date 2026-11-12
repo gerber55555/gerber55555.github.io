@@ -221,3 +221,25 @@ b = plate_all.bounding_box()
 print(f"{n} flat links per piece ({n // 2 if LOGO_LINKS else 0} diamonds), piece length {seg_len:.1f} mm, "
       f"plate {b[3] - b[0]:.0f} x {b[4] - b[1]:.0f} mm ({'diagonal' if rot else 'straight'}), "
       f"approx necklace {SEGMENTS * (seg_len - RING_ID):.0f} mm")
+
+# ---------------- test print ----------------
+# A short piece (ring, 4 links incl. 2 blue diamonds, stem + T-bar) plus a copy of the
+# medallion's loop. Checks that the links print free, the T-bar clips into a ring
+# (clip the piece's T-bar into its own ring), and the T-bar fits the medallion's loop.
+TEST_LINKS = 4
+BAIL_RI, BAIL_WALL, BAIL_T = 5.0, 3.0, 3.6     # match make_medallion.py (10 mm hole, 3 mm wall, 3.6 mm thick)
+tg, tb, tlen = segment(TEST_LINKS, check=True)
+bail = (CrossSection.circle(BAIL_RI + BAIL_WALL, SEG * 2) - CrossSection.circle(BAIL_RI, SEG * 2)
+        + CrossSection.square([12, 6]).translate([-6, -BAIL_RI - BAIL_WALL - 4])).extrude(BAIL_T)
+bail = bail.translate([tlen / 2, -(TBAR_LEN / 2 + BAIL_RI + BAIL_WALL + 5), 0])
+tg = tg + bail
+toff = centre_offset(tg + tb)
+test_scene = trimesh.Scene()
+for name, m, col in [("gold", tg, [212, 175, 55, 255]), ("blue", tb, [30, 70, 200, 255])]:
+    pm = to_trimesh(m.translate(toff))
+    pm.visual.face_colors = col
+    test_scene.add_geometry(pm, node_name=name, geom_name=name)
+test_scene.export(os.path.join(here, "chain_test.3mf"))
+to_trimesh((tg + tb).translate(toff)).export(os.path.join(here, "chain_test.stl"))
+tb_box = (tg + tb).bounding_box()
+print(f"test print: {tb_box[3] - tb_box[0]:.0f} x {tb_box[4] - tb_box[1]:.0f} mm")
