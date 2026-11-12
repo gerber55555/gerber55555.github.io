@@ -17,7 +17,7 @@ import math
 import os
 import numpy as np
 import trimesh
-from manifold3d import Manifold
+from manifold3d import Manifold, CrossSection
 
 import make_chain as C
 import make_medallion as M
@@ -29,7 +29,9 @@ BED = (350, 350)
 BED_MARGIN = 10
 C.SLOT = C.BW / 2 + C.GAP + 0.5   # wider channel in the diamonds so joints can bend on the corners
 WO_B = 13.0             # width of the bail link (wider gold link at the top centre)
-G2 = 1.0                # gap between the bail link and the medallion's loop
+G2 = 12.0               # gap between the bail link and the medallion's loop: long enough that the
+                        # medallion can swing ~180 degrees over the chain to hang down when worn
+BAIL_RISE = 4.0         # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
 
 GOLD = [212, 175, 55, 255]
 BLUE = [30, 70, 200, 255]
@@ -141,8 +143,18 @@ def hang(y_top, med_gold_src, med_blue_src, med_bail_cy):
     mb = med_blue_src.translate([0, dy, 0]) if med_blue_src is not None else None
     a = rail_bottom - C.GAP - C.POST
     b = yr + C.RW + C.GAP + C.POST
-    bail = (C.box(-C.BW / 2, C.BW / 2, a, b, 0, top0 + C.BT)
-            - C.box(-C.BW, C.BW, a + C.POST, b - C.POST, C.TC, top0))
+    # bail profile in (y, z): bottom rod, two posts, and a roof whose underside rises at 45 degrees
+    # from each post (self-supporting) to a short flat bridge
+    pa, pb = a + C.POST, b - C.POST                     # inner faces of the posts
+    rise = max(0.0, min(BAIL_RISE, (pb - pa) / 2 - 2.0))
+    inner = [(pa, C.TC), (pb, C.TC), (pb, top0), (pb - rise, top0 + rise),
+             (pa + rise, top0 + rise), (pa, top0)]
+    outer = [(a, 0), (b, 0), (b, top0 + C.BT), (pb, top0 + C.BT), (pb - rise, top0 + rise + C.BT),
+             (pa + rise, top0 + rise + C.BT), (pa, top0 + C.BT), (a, top0 + C.BT)]
+    prof = CrossSection([outer]) - CrossSection([inner])          # (y, z) profile
+    bail = prof.extrude(C.BW).rotate([90, 0, 90]).translate([-C.BW / 2, 0, 0])
+    bb = bail.bounding_box()
+    assert abs(bb[1] - a) < 1e-6 and abs(bb[2]) < 1e-6, bb   # profile landed where intended
     assert a - (ring_c - ri) > 0.5, "bail post doesn't fit inside the medallion's loop"
     return mg, mb, bail
 
