@@ -79,14 +79,15 @@ Under tension it lies across the ring and can't pull back out.
 
 | File | Use |
 |---|---|
-| `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (253 × 253 mm) |
+| `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (324 × 324 mm, fills a 350 × 350 mm bed) |
 | `hype_plate_gold.stl`, `hype_plate_blue.stl` | Same two colours as separate STLs |
 | `hype_plate.stl` | Single colour |
-| `hype_test.3mf` / `hype_test.stl` | Test print (127 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
-| `make_hype_chain.py` | Parametric source (`LOOP_LEN`, `MAX_JOINT_DEG`, `BED`) |
+| `hype_test.3mf` / `hype_test.stl` | Test print (125 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
+| `make_hype_chain.py` | Parametric source (`FILL_BED`, `LOOP_LEN`, `MAX_JOINT_DEG`, `BED`) |
 
-The chain prints as one closed loop of about 77 cm (30 in): 54 links, alternating gold and blue diamonds,
-with no clasp, so it goes over your head. The medallion prints in the middle. A gold **bail** prints already
+The chain prints as one closed loop that fills the bed: about 105 cm (41 in), 74 links alternating gold and blue diamonds,
+with no clasp, so it goes over your head. Set `FILL_BED = False` and `LOOP_LEN` for a shorter loop
+(e.g. 760 for 30 in). The medallion prints in the middle. A gold **bail** prints already
 linked through both: it is an upright loop whose bottom rod runs through a tunnel under the inner rail of the wider
 gold "bail link" at the top of the chain and a tunnel under the top of the medallion's loop. The medallion comes off
 the bed already hanging from the chain.

@@ -23,7 +23,8 @@ import make_chain as C
 import make_medallion as M
 
 # ---------------- parameters (mm) ----------------
-LOOP_LEN = 760          # chain length around the loop (~30 in)
+FILL_BED = True         # True: make the loop as big as the bed allows; False: use LOOP_LEN
+LOOP_LEN = 760          # chain length around the loop when FILL_BED is False (~30 in)
 MAX_JOINT_DEG = 9.0     # how far each joint is bent on the corners (tested OK to 11)
 BED = (350, 350)
 BED_MARGIN = 10
@@ -55,32 +56,32 @@ def bail_link(x0):
 
 
 # ---------------- chain loop ----------------
-# links alternate gold / blue; link 0 is the bail link (gold, centred at the top)
-kinds = []
-total, i = 0.0, 0
-while True:
-    k = "d" if i % 2 else "r"
-    total += (C.LD if k == "d" else C.LO) + C.S
-    kinds.append(k)
-    i += 1
-    if total >= LOOP_LEN and i % 2 == 0:
-        break
-lengths = [C.LD if k == "d" else C.LO for k in kinds]
-perim = sum(lengths) + C.S * len(kinds)
-
 # rounded-square path: corner radius from the joint-angle limit
 max_step = max(C.LO, C.LD) + C.S
 RC = max_step / math.radians(MAX_JOINT_DEG)
+if FILL_BED:
+    # largest loop whose outer edge (the diamonds stick out D_HALF from the centre line) fits the bed
+    reach = min(BED) / 2 - BED_MARGIN - C.D_HALF - 0.5
+    target = 8 * (reach - RC) + 2 * math.pi * RC
+else:
+    target = LOOP_LEN
+
+# links alternate gold / blue (even count); link 0 is the bail link (gold, centred at the top)
+kinds, total = [], 0.0
+pair = C.LO + C.LD + 2 * C.S
+while total + pair <= target if FILL_BED else total < target:
+    kinds += ["r", "d"]
+    total += pair
+lengths = [C.LD if k == "d" else C.LO for k in kinds]
+perim = sum(lengths) + C.S * len(kinds)
 side = (perim - 2 * math.pi * RC) / 4
 assert side >= C.LO + 2 * C.S, "loop too short for these corners - raise LOOP_LEN or MAX_JOINT_DEG"
 half = side / 2
 
 
-def path(s):
-    """point on the rounded square at arc length s, starting at the top centre, clockwise"""
-    s %= perim
-    segs = []
-    # top straight right half, then corner, right straight, corner, bottom, corner, left, corner, top left half
+def make_path(half, perim):
+    """rounded square with straight sides of 2*half; arc length s from the top centre, clockwise"""
+    side = 2 * half
     pieces = [("line", (0, half + RC), (1, 0), half)]
     centres = [(half, half), (half, -half), (-half, -half), (-half, half)]
     dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
@@ -89,14 +90,21 @@ def path(s):
     for k in range(4):
         pieces.append(("arc", centres[k], start_ang[k], math.pi / 2 * RC))
         pieces.append(("line", starts[k], dirs[k], side if k < 3 else half))
-    for kind, a, b, length in pieces:
-        if s <= length + 1e-9:
-            if kind == "line":
-                return np.array([a[0] + b[0] * s, a[1] + b[1] * s])
-            ang = math.radians(b) - s / RC
-            return np.array([a[0] + RC * math.cos(ang), a[1] + RC * math.sin(ang)])
-        s -= length
-    raise ValueError
+
+    def path(s):
+        s %= perim
+        for kind, a, b, length in pieces:
+            if s <= length + 1e-9:
+                if kind == "line":
+                    return np.array([a[0] + b[0] * s, a[1] + b[1] * s])
+                ang = math.radians(b) - s / RC
+                return np.array([a[0] + RC * math.cos(ang), a[1] + RC * math.sin(ang)])
+            s -= length
+        raise ValueError
+    return path
+
+
+path = make_path(half, perim)
 
 
 def lay(kinds, path_fn, closed=True, bail_index=0):
@@ -174,10 +182,12 @@ blue_parts += [med_blue]
 def build_test():
     """9 links from the top of the real loop: the bail link on the straight, then into the corner bends"""
     t_kinds = ["r", "d", "r", "d", "r", "d", "r", "d", "r"]
-    tg, tb, tl, tc, ta = lay(t_kinds, path, closed=False, bail_index=4)
+    t_half = C.LO / 2 + C.S + 4        # just the bail link and its gaps on the straight, as on a small loop
+    t_path = make_path(t_half, 8 * t_half + 2 * math.pi * RC)
+    tg, tb, tl, tc, ta = lay(t_kinds, t_path, closed=False, bail_index=4)
     ring = (M.CrossSection.circle(M.BAIL_OR, 96) - M.CrossSection.circle(M.BAIL_HOLE, 96)
             + M.CrossSection.square([14, 8]).translate([-7, -M.BAIL_OR - 6])).extrude(M.BASE)
-    mg, _, bl = hang(half + RC, ring, None, 0.0)
+    mg, _, bl = hang(t_half + RC, ring, None, 0.0)
     return tg + [mg, bl], tb, tl, tc, ta, mg, bl
 
 
@@ -266,7 +276,7 @@ def export(prefix, gold, blue):
 def main():
     check(links, conns, [med_gold, med_blue], bail, 0)
     w, h = export("hype_plate", C.union(gold_parts), C.union(blue_parts))
-    print(f"{len(links)} links ({kinds.count('d')} diamonds), loop {perim:.0f} mm, corner radius {RC:.0f} mm, "
+    print(f"{len(links)} links ({kinds.count('d')} diamonds), loop {perim:.0f} mm ({perim / 25.4:.0f} in), corner radius {RC:.0f} mm, "
           f"max joint bend {max(joint_angles):.1f} deg, plate {w:.0f} x {h:.0f} mm")
     tg, tb, tl, tc, ta, mg, bl = build_test()
     check(tl, tc, [mg], bl, 4, closed=False)
