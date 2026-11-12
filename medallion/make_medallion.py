@@ -19,7 +19,7 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 # ---------------- parameters ----------------
-DIAMETER = 75.0     # overall disc diameter; all face artwork scales with it
+DIAMETER = 100.0    # overall disc diameter; all face artwork scales with it
 K = DIAMETER / 50.0 # scale factor relative to the original 50 mm design
 R = DIAMETER / 2
 BASE = 3.6          # base disc thickness

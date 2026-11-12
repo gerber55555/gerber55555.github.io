@@ -1,6 +1,6 @@
 # King of Jira medallion and chain (3D printable)
 
-A 75 mm (3 in) wearable pendant with a raised rim, a diamond emblem and raised "Jira" text on the front,
+A 100 mm (4 in) wearable pendant with a raised rim, a diamond emblem and raised "Jira" text on the front,
 "STATUS = SUCCESS" inlaid in blue on the back, and a print-in-place chain to hang it on.
 
 ![front and back](preview.png)
@@ -14,7 +14,7 @@ A 75 mm (3 in) wearable pendant with a raised rim, a diamond emblem and raised "
 | `medallion.stl` | Single-colour, one-piece print (back text is not cut in) |
 | `make_medallion.py` | Parametric source |
 
-**Size:** 75 × 89 × 5.6 mm, roughly 15–20 g of PLA. Change `DIAMETER` in `make_medallion.py` for a different size; the face artwork scales with it. The loop at the top has a 10 mm hole, the same size as the chain's toggle rings, so a chain T-bar clips straight into it.
+**Size:** 100 × 114 × 5.6 mm, roughly 25–35 g of PLA. Change `DIAMETER` in `make_medallion.py` for a different size; the face artwork scales with it. The loop at the top has a 10 mm hole, the same size as the chain's toggle rings, so a chain T-bar clips straight into it.
 
 **Print:** flat, face up, no supports, 3–4 walls, 20–30% infill.
 The back text is a 0.2 mm inlay, so it is exactly the **first layer** and comes out blue on the bed side.
