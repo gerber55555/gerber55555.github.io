@@ -31,7 +31,9 @@ NECKLACE_LEN = 760      # total length when closed (~30 in)
 SEGMENTS = 2            # pieces: 2 = clasp at the back + medallion joint at the front
 BED = (350, 350)        # print bed (mm); pieces are laid diagonally if they don't fit straight
 BED_MARGIN = 10         # keep this far from the bed edges
-GAP = 0.5               # print-in-place clearance (0.4-0.6 typical)
+GAP = 0.7               # print-in-place clearance side to side (raised from 0.5 after a test print fused)
+GAP_Z = 1.0             # clearance above/below the short bridges (bridges sag, so this needs more);
+                        # keep it a multiple of your layer height
 
 # connectors (gold, standing loops)
 BW = 3.5                # connector width across the chain
@@ -40,19 +42,19 @@ POST = 1.6              # post length along the chain
 BT = 2.0                # top bar thickness
 
 # flat links
-LO, WO = 14.0, 8.5      # gold link outer length / width
+LO, WO = 14.0, 9.5      # gold link outer length / width
 RW = 1.8                # rail width
 S = 1.0                 # bed gap between consecutive flat links
 TB = 1.6                # thickness of the arched end bar above its tunnel
-HB = TC + GAP           # tunnel height under each end bar
+HB = TC + GAP_Z         # tunnel height under each end bar
 HL = HB + TB            # flat link height
 TUN = BW / 2 + GAP      # tunnel half-width
-TOP0 = HL + GAP         # underside of the connector's top bar
+TOP0 = HL + GAP_Z       # underside of the connector's top bar
 
 # diamond "logo" links (every other flat link)
 LOGO_LINKS = True
 D_HALF = 10.0           # half-diagonal: 20 mm wide across the chain
-D_TIP = 3.8             # the along-chain points are blunted to this half-width (room for the tunnel arch)
+D_TIP = 4.2             # the along-chain points are blunted to this half-width (room for the tunnel arch)
 D_HOLE = 0.56           # open centre as a fraction of the outer size (same look as the medallion)
 SLOT = BW / 2 + GAP     # channel along the middle for the connector posts
 LD = 2 * (D_HALF - D_TIP)    # diamond link length along the chain
@@ -136,7 +138,7 @@ def segment(n_links, check=False):
     if check:
         for c in conns:
             for q in order:
-                assert (c ^ q).volume() < 1e-6, "connector touches a link - increase GAP"
+                assert (c ^ q).volume() < 1e-6, "connector touches a link - increase GAP / GAP_Z"
         for p, q in zip(order, order[1:]):
             assert (p ^ q).volume() < 1e-6, "links touch"
         for p, q in zip(conns, conns[1:]):
@@ -157,8 +159,10 @@ def check_interlock():
     links.append(flat_link(x3)); conns.append(connector(x3 + LO, tbar=True))
     dirs = [np.array(v, float) / np.linalg.norm(v) for v in itertools.product([-1, 0, 1], repeat=3) if any(v)]
     pairs = [(0, 1), (1, 2), (2, 3), (4,)]
+    shifts = [(0.6, 0, 0), (-0.6, 0, 0), (0, 0.6, 0), (0, -0.6, 0), (0, 0, 0.9), (0, 0, -0.9)]
     for i, c in enumerate(conns):
-        assert all((c ^ l).volume() < 1e-6 for l in links), f"connector {i} touches a link"
+        assert all((c.translate(list(v)) ^ l).volume() < 1e-6 for l in links for v in shifts), \
+            f"connector {i} has less than 0.6 mm (side) / 0.9 mm (vertical) clearance"
         for dv in dirs:
             assert any((c.translate(list(dv * t)) ^ links[j]).volume() > 1e-6
                        for t in np.arange(0.25, 40, 0.25) for j in pairs[i]), \

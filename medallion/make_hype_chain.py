@@ -33,6 +33,8 @@ MEDALLION_SIZE = 160     # diameter in mm, or "fill" for as big as fits inside t
 MED_CLEAR = 4.0         # keep the medallion this far from the chain links
 G2 = 12.0               # gap between the bail link and the medallion's loop: long enough that the
                         # medallion can swing ~180 degrees over the chain to hang down when worn
+MIN_CLEAR_XY = 0.5      # the checks fail if any moving part has less room than this side to side...
+MIN_CLEAR_Z = 0.9       # ...or above/below (a test print fused at 0.5 mm)
 BAIL_RISE = 4.0         # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
 
 GOLD = [212, 175, 55, 255]
@@ -175,9 +177,11 @@ def hang(y_top, med_gold_src, med_blue_src, med_bail_cy):
     ri = M.BAIL_HOLE
     sag_in = ri - math.sqrt(ri ** 2 - (C.BW / 2) ** 2)
     rail_bottom = ring_c + ri - sag_in
-    top0 = max(C.HL, M.BASE) + C.GAP
+    top0 = C.HL + C.GAP_Z
     tunnel = C.box(-C.TUN, C.TUN, ring_c + ri - 1.2, ring_top + 1, -1, C.HB)
-    mg = med_gold_src.translate([0, dy, 0]) - tunnel
+    # thicken the medallion's loop to the chain links' height so the arch over its tunnel is as strong as theirs
+    thick = (CrossSection.circle(M.BAIL_OR, 96) - CrossSection.circle(ri, 96)).extrude(C.HL).translate([0, ring_c, 0])
+    mg = (med_gold_src.translate([0, dy, 0]) + thick) - tunnel
     mb = med_blue_src.translate([0, dy, 0]) if med_blue_src is not None else None
     a = rail_bottom - C.GAP - C.POST
     b = yr + C.RW + C.GAP + C.POST
@@ -228,12 +232,12 @@ def bb_overlap(p, q, pad=0.0):
 
 
 def check(links, conns, med_parts, bail, bail_link_idx, closed=True):
-    """every pair of nearby parts >= 0.3 mm apart; connectors and bail trapped by their neighbours"""
+    """every pair of nearby parts >= MIN_CLEAR_XY apart side to side and MIN_CLEAR_Z above/below; connectors and bail trapped by their neighbours"""
     parts = links + conns + [m for m in med_parts if m is not None] + [bail]
     names = ([f"link{i}" for i in range(len(links))] + [f"conn{i}" for i in range(len(conns))]
              + [f"medallion{i}" for i, m in enumerate(med_parts) if m is not None] + ["bail"])
-    d = 0.3
-    shifts = [(d, 0, 0), (-d, 0, 0), (0, d, 0), (0, -d, 0), (0, 0, d), (0, 0, -d)]
+    d, dz = MIN_CLEAR_XY, MIN_CLEAR_Z
+    shifts = [(d, 0, 0), (-d, 0, 0), (0, d, 0), (0, -d, 0), (0, 0, dz), (0, 0, -dz)]
     for (i, p), (j, q) in itertools.combinations(enumerate(parts), 2):
         if (names[i].startswith("medallion") and names[j].startswith("medallion")) or not bb_overlap(p, q, 0.5):
             continue
@@ -241,7 +245,7 @@ def check(links, conns, med_parts, bail, bail_link_idx, closed=True):
         other = q if movable is p else p
         for v in shifts:
             assert (movable.translate(list(v)) ^ other).volume() < 1e-6, \
-                f"{names[i]} and {names[j]} closer than 0.3 mm"
+                f"{names[i]} and {names[j]} are too close"
     dirs3 = [np.array(v, float) / np.linalg.norm(v) for v in itertools.product([-1, 0, 1], repeat=3) if any(v)]
     traps = [(c, [links[i], links[(i + 1) % len(links)]]) for i, c in enumerate(conns)]
     traps.append((bail, [links[bail_link_idx], med_parts[0]]))

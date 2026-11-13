@@ -28,15 +28,15 @@ Without a multi-colour printer: swap filament manually after layer 1 (blue, then
 |---|---|
 | `chain_plate.3mf` | Both pieces with gold and blue parts, for AMS/MMU printers (**use this for blue logo links**) |
 | `chain_plate_gold.stl`, `chain_plate_blue.stl` | The same two colours as separate STLs (shared coordinates) |
-| `chain_plate.stl` | Both pieces, single colour (307 × 307 mm, laid diagonally for a 350 × 350 mm bed) |
-| `chain_segment.stl` | One piece (396 mm long; it only fits a 350 mm bed diagonally) |
-| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`, `LOGO_LINKS`) |
+| `chain_plate.stl` | Both pieces, single colour (299 × 299 mm, laid diagonally for a 350 × 350 mm bed) |
+| `chain_segment.stl` | One piece (386 mm long; it only fits a 350 mm bed diagonally) |
+| `make_chain.py` | Parametric source (`NECKLACE_LEN`, `SEGMENTS`, `BED`, `GAP`, `GAP_Z`, `LOGO_LINKS`) |
 
 ![chain](chain_preview.png)
 ![plate](chain_plate_preview.png)
 
-This is the necklace itself: about 77 cm (30 in) long, long enough to pull over your head, with a clasp so you
-don't have to. It prints flat and already linked, with no supports, about 6 mm thick.
+This is the necklace itself: about 75 cm (30 in) long, long enough to pull over your head, with a clasp so you
+don't have to. It prints flat and already linked, with no supports, about 7 mm thick.
 
 **How it holds together:** flat links lie on the bed and alternate between gold rectangles and 20 mm blue diamonds
 (the medallion's logo; 13 per piece). Each end bar of a flat link is a small arch with a tunnel under it. Between
@@ -51,17 +51,19 @@ so the necklace has exactly two joints: the clasp at the back and the medallion'
 
 For a smaller bed, raise `SEGMENTS` (use an even number so a joint lands at the front) and set `BED`.
 
-**Test print first:** `chain_test.3mf` (two colours) or `chain_test.stl` (one colour), 84 × 46 mm, about 10–15 minutes.
+**Test print first:** `chain_test.3mf` (two colours) or `chain_test.stl` (one colour), 82 × 46 mm, about 10–15 minutes.
 It's a short piece with the real ring, two gold links, two blue diamonds, the connectors, the stem and T-bar, plus a copy
 of the medallion's loop. After printing, check that:
-1. every link moves freely (flex each one; if any are fused, raise `GAP` to 0.6 and regenerate);
+1. every link moves freely (flex each one; if any are fused, raise `GAP` / `GAP_Z` and regenerate);
 2. the T-bar clips into the piece's own ring and won't pull back out;
 3. the T-bar and stem go through the loop copy, as they will on the medallion.
 
 ![test](chain_test_preview.png)
 
 **Print:** 0.2 mm layers, 100% infill or 4+ walls (the links are small), no brim, good bridging/cooling settings.
-`GAP` is 0.5 mm; if links come out fused, raise it to 0.6 and re-run the script.
+Clearances: `GAP` = 0.7 mm side to side and `GAP_Z` = 1.0 mm above/below the short bridges (bridges sag, so they need
+more). These were raised from 0.5 mm after a test print fused. If links still fuse, raise them (keep `GAP_Z` a multiple
+of your layer height) and re-run the scripts; if the chain is too loose, lower them a little.
 Right after printing, flex every link gently to break the links free.
 
 **Assemble (toggle joints):** a T-bar goes through a ring like a toggle clasp. Push one end of the bar through the ring,
@@ -79,13 +81,13 @@ Under tension it lies across the ring and can't pull back out.
 
 | File | Use |
 |---|---|
-| `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (324 × 324 mm, fills a 350 × 350 mm bed) |
+| `hype_plate.3mf` | The whole necklace in one print, gold + blue parts for AMS/MMU printers (323 × 323 mm, fills a 350 × 350 mm bed) |
 | `hype_plate_gold.stl`, `hype_plate_blue.stl` | Same two colours as separate STLs |
 | `hype_plate.stl` | Single colour |
-| `hype_test.3mf` / `hype_test.stl` | Test print (125 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
+| `hype_test.3mf` / `hype_test.stl` | Test print (123 × 50 mm): the bail link, the bail, a copy of the medallion's loop, and links bending as much as the corners do |
 | `make_hype_chain.py` | Parametric source (`FILL_BED`, `LOOP_LEN`, `MEDALLION_SIZE`, `MAX_JOINT_DEG`, `BED`) |
 
-The chain prints as one closed loop that fills the bed: about 105 cm (41 in), 74 links alternating gold and blue diamonds,
+The chain prints as one closed loop that fills the bed: about 105 cm (41 in), 76 links alternating gold and blue diamonds,
 with no clasp, so it goes over your head. Set `FILL_BED = False` and `LOOP_LEN` for a shorter loop
 (e.g. 760 for 30 in). The medallion prints in the middle at 160 mm (6.3 in) across; the separate `medallion.*` files stay 100 mm.
 Change `MEDALLION_SIZE` in `make_hype_chain.py` for another size, or set it to `"fill"` for the largest that fits
@@ -101,8 +103,8 @@ simulates the whole swing and checks nothing collides. Because it flips, the med
 way as the chain's **underside** (the side that was on the bed). So wear the chain bed-side out; the chain looks the same
 from both sides.
 
-The chain is laid out as a rounded square. Each joint on the corners is bent 8.5°; the parts were checked to keep
-0.3 mm clearance up to 11°. For that, the channel down the middle of the diamonds is a bit wider than on the
+The chain is laid out as a rounded square. Each joint on the corners is bent up to 8.3°. Even on the bent joints
+every moving part has at least 0.57 mm of room side to side and 1.0 mm above/below (the script fails below 0.5 / 0.9 mm). For that, the channel down the middle of the diamonds is a bit wider than on the
 straight chain. The script checks clearance between every pair of nearby parts and that the connectors and bail
 can't slide free.
 
