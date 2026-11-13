@@ -41,8 +41,8 @@ BACK_CAP_H = 6.0 * K            # capital letter height
 BACK_MAX_W = 34.0 * K           # longest line is shrunk to fit this width
 BACK_DEPTH = 0.2                # inlay depth = your first-layer height (use 0.4 for two layers)
 # bail = a toggle ring, same size as the chain's, so a chain T-bar clips straight into it
-BAIL_HOLE = 5.0                 # hole radius (10 mm hole) - keep matching the chain's RING_ID
-BAIL_OR = BAIL_HOLE + 3.0       # 3 mm wall for the heavier medallion
+BAIL_HOLE = 7.0                 # hole radius (14 mm hole) - roomy enough for the chain's T-bar end and the hype bail
+BAIL_OR = BAIL_HOLE + 3.5       # 3.5 mm wall
 BAIL_CY = R + BAIL_HOLE + 0.8   # hole stays just clear of the disc edge
 SEG = 128
 

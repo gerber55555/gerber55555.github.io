@@ -35,34 +35,50 @@ GAP = 0.7               # print-in-place clearance side to side (raised from 0.5
 GAP_Z = 1.0             # clearance above/below the short bridges (bridges sag, so this needs more);
                         # keep it a multiple of your layer height
 
+CHAIN_SCALE = 1.4       # overall size of the links (1.0 = the original design). Clearances (GAP, GAP_Z)
+                        # don't scale, so bigger links are stronger AND have more free movement
+LAYER = 0.2             # heights are rounded to whole layers
+
+
+def sc(v):
+    return v * CHAIN_SCALE
+
+
+def lz(v):
+    """scale a height and round it to whole layers"""
+    return max(LAYER, round(v * CHAIN_SCALE / LAYER) * LAYER)
+
+
 # connectors (gold, standing loops)
-BW = 3.5                # connector width across the chain
-TC = 1.4                # bottom rod height (runs through the tunnels)
-POST = 1.6              # post length along the chain
-BT = 2.0                # top bar thickness
+BW = sc(3.5)            # connector width across the chain
+TC = lz(1.4)            # bottom rod height (runs through the tunnels)
+POST = sc(1.6)          # post length along the chain
+BT = lz(2.0)            # top bar thickness
 
 # flat links
-LO, WO = 14.0, 9.5      # gold link outer length / width
-RW = 1.8                # rail width
-S = 1.0                 # bed gap between consecutive flat links
-TB = 1.6                # thickness of the arched end bar above its tunnel
+LO, WO = sc(14.0), sc(9.5)   # gold link outer length / width
+RW = sc(1.8)            # rail width
+S = sc(1.0)             # bed gap between consecutive flat links
+TB = lz(1.6)            # thickness of the arched end bar above its tunnel
 HB = TC + GAP_Z         # tunnel height under each end bar
 HL = HB + TB            # flat link height
-TUN = BW / 2 + GAP      # tunnel half-width
+PLAY = sc(0.5)          # extra free movement on top of the print clearance (sideways in the tunnels/slots
+                        # and along the chain inside each connector loop)
+TUN = BW / 2 + GAP + PLAY    # tunnel half-width
 TOP0 = HL + GAP_Z       # underside of the connector's top bar
 
 # diamond "logo" links (every other flat link)
 LOGO_LINKS = True
-D_HALF = 10.0           # half-diagonal: 20 mm wide across the chain
-D_TIP = 4.2             # the along-chain points are blunted to this half-width (room for the tunnel arch)
+D_HALF = sc(10.0)       # half-diagonal (20 mm wide across the chain at scale 1)
+D_TIP = sc(4.2)         # the along-chain points are blunted to this half-width (room for the tunnel arch)
 D_HOLE = 0.56           # open centre as a fraction of the outer size (same look as the medallion)
-SLOT = BW / 2 + GAP     # channel along the middle for the connector posts
+SLOT = BW / 2 + GAP + PLAY   # channel along the middle for the connector posts
 LD = 2 * (D_HALF - D_TIP)    # diamond link length along the chain
 
-RING_ID = 10.0          # toggle ring inner diameter
-TBAR_LEN, TBAR_W = 21.0, 2.6   # toggle bar (length across, along-chain width)
-STEM, STEM_H = 12.0, 3.0       # solid stem between the last link and the T-bar; the clasp ring and
-                               # the medallion's loop (3.5 + 3.6 mm thick) both ride on it
+RING_ID = sc(10.0)      # toggle ring inner diameter
+TBAR_LEN, TBAR_W = sc(21.0), sc(2.6)   # toggle bar (length across, along-chain width)
+STEM, STEM_H = sc(12.0), lz(3.0)       # solid stem between the last link and the T-bar; the clasp ring and
+                                       # the medallion's loop both ride on it
 SEG = 48
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -98,17 +114,17 @@ def toggle_ring(x_end):
     cx = x_end - RW - np.sqrt(ri ** 2 - TUN ** 2)
     ring = CrossSection.circle(ro, SEG * 2) - CrossSection.circle(ri, SEG * 2)
     m = ring.extrude(HL).translate([cx, 0, 0])
-    m -= box(x_end - RW - 1.0, x_end + 1, -TUN, TUN, -1, HB)
+    m -= box(x_end - RW - 1.0, x_end + RW + 2, -TUN, TUN, -1, HB)
     return m, cx - ro
 
 def connector(x_end, tbar=False):
     """closed upright loop linking the flat link ending at x_end with the next one"""
-    a = x_end - RW - GAP - POST
+    a = x_end - RW - GAP - PLAY - POST
     if not tbar:
-        b = x_end + S + RW + GAP + POST
+        b = x_end + S + RW + GAP + PLAY + POST
         return box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
     # end piece: loop around the last link's rear bar, then a stem, then the T-bar
-    b = x_end + GAP + POST
+    b = x_end + GAP + PLAY + POST
     loop = box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
     stem = box(b - 0.5, b + STEM, -BW / 2, BW / 2, 0, STEM_H)
     bar = box(b + STEM - TBAR_W, b + STEM, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
@@ -232,7 +248,7 @@ def main():
     # medallion's loop. Checks that the links print free, the T-bar clips into a ring
     # (clip the piece's T-bar into its own ring), and the T-bar fits the medallion's loop.
     TEST_LINKS = 4
-    BAIL_RI, BAIL_WALL, BAIL_T = 5.0, 3.0, 3.6     # match make_medallion.py (10 mm hole, 3 mm wall, 3.6 mm thick)
+    BAIL_RI, BAIL_WALL, BAIL_T = 7.0, 3.5, 3.6     # match make_medallion.py (14 mm hole, 3.5 mm wall, 3.6 mm thick)
     tg, tb, tlen = segment(TEST_LINKS, check=True)
     bail = (CrossSection.circle(BAIL_RI + BAIL_WALL, SEG * 2) - CrossSection.circle(BAIL_RI, SEG * 2)
             + CrossSection.square([12, 6]).translate([-6, -BAIL_RI - BAIL_WALL - 4])).extrude(BAIL_T)

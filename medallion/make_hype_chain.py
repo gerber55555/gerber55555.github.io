@@ -27,15 +27,15 @@ LOOP_LEN = 760          # chain length around the loop when FILL_BED is False (~
 MAX_JOINT_DEG = 9.0     # how far each joint is bent on the corners (tested OK to 11)
 BED = (350, 350)
 BED_MARGIN = 10
-C.SLOT = C.BW / 2 + C.GAP + 0.5   # wider channel in the diamonds so joints can bend on the corners
-WO_B = 13.0             # width of the bail link (wider gold link at the top centre)
+C.SLOT = C.BW / 2 + C.GAP + C.PLAY + C.sc(0.5)   # wider channel in the diamonds so joints can bend on the corners
+WO_B = C.sc(14.5)            # width of the bail link (wider gold link at the top centre)
 MEDALLION_SIZE = 160     # diameter in mm, or "fill" for as big as fits inside the loop (257 mm on a 350 mm bed)
 MED_CLEAR = 4.0         # keep the medallion this far from the chain links
-G2 = 12.0               # gap between the bail link and the medallion's loop: long enough that the
+G2 = C.sc(12.0)              # gap between the bail link and the medallion's loop: long enough that the
                         # medallion can swing ~180 degrees over the chain to hang down when worn
 MIN_CLEAR_XY = 0.5      # the checks fail if any moving part has less room than this side to side...
 MIN_CLEAR_Z = 0.9       # ...or above/below (a test print fused at 0.5 mm)
-BAIL_RISE = 4.0         # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
+BAIL_RISE = C.sc(4.0)        # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
 
 GOLD = [212, 175, 55, 255]
 BLUE = [30, 70, 200, 255]
@@ -112,7 +112,7 @@ path = make_path(half, perim)
 
 # ---------------- medallion size ----------------
 # bail geometry from make_medallion.py (independent of the medallion's diameter)
-BAIL_HOLE_, BAIL_OR_ = 5.0, 8.0
+BAIL_HOLE_, BAIL_OR_ = 7.0, 10.5
 
 
 def medallion_fits(d):
@@ -183,8 +183,8 @@ def hang(y_top, med_gold_src, med_blue_src, med_bail_cy):
     thick = (CrossSection.circle(M.BAIL_OR, 96) - CrossSection.circle(ri, 96)).extrude(C.HL).translate([0, ring_c, 0])
     mg = (med_gold_src.translate([0, dy, 0]) + thick) - tunnel
     mb = med_blue_src.translate([0, dy, 0]) if med_blue_src is not None else None
-    a = rail_bottom - C.GAP - C.POST
-    b = yr + C.RW + C.GAP + C.POST
+    a = rail_bottom - C.GAP - C.PLAY - C.POST
+    b = yr + C.RW + C.GAP + C.PLAY + C.POST
     # bail profile in (y, z): bottom rod, two posts, and a roof whose underside rises at 45 degrees
     # from each post (self-supporting) to a short flat bridge
     pa, pb = a + C.POST, b - C.POST                     # inner faces of the posts
