@@ -18,15 +18,15 @@ screw_grip       = 3;    // material left under the screw head (mm) -> 6 mm scre
 boss_h      = 3;    // standoff boss height between board and plate (clears back components)
 boss_d      = 8;
 plate_t     = 4;    // upright thickness
-plate_w     = 14;   // upright width
+plate_w     = 22;   // upright width (= foot_w so the whole side is flat for printing on its side)
 foot_t      = 5;    // foot thickness
 foot_w      = 22;   // foot width (side to side)
 foot_back   = 70;   // foot length behind the board
 foot_front  = 25;   // foot length in front of the board's back plane (under the screen)
-clearance   = 8;    // gap between table/foot top and bottom edge of the board
+clearance   = 33.4; // gap between foot top and bottom edge of the board (8 mm + 1 inch)
 top_margin  = 5;    // upright extends this far above the top hole (5 = flush with top of board)
 gusset_t    = 3;
-gusset_h    = 40;
+gusset_h    = 60;
 gusset_len  = 40;
 
 $fn = 48;
