@@ -120,6 +120,17 @@ Print `hype_test` first. Check that the links bend freely (including the bent on
 moves freely through the bail link and the loop copy, that the loop copy can flip all the way over the chain,
 and that nothing is fused.
 
+### Worn preview
+
+![worn](worn_preview.png)
+
+`make_worn_preview.py` draws the hype chain and medallion to scale on an average adult-male outline (front view),
+next to a 76 cm (30 in) loop for comparison. It isn't a physics simulation: the chain goes round the back of the neck
+and the front hangs as a catenary between the sides of the neck. With the current 98 cm loop the medallion's bottom
+sits about 48 cm below the base of the neck (around the navel); a 76 cm loop puts it about 36 cm down (upper stomach).
+The loop's inside edge is about 94 cm around (about 71 cm for a 76 cm loop); going over an adult head takes roughly
+65-70 cm, so the current loop clears easily and a 76 cm loop only just does.
+
 ## Regenerate
 
 ```
@@ -127,4 +138,5 @@ pip install manifold3d trimesh shapely matplotlib networkx lxml
 python3 make_medallion.py
 python3 make_chain.py
 python3 make_hype_chain.py           # add --swing to also simulate the medallion swinging down
+python3 make_worn_preview.py
 ```
