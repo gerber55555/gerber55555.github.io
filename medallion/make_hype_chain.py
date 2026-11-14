@@ -24,7 +24,7 @@ import make_chain as C
 # ---------------- parameters (mm) ----------------
 FILL_BED = True         # True: make the loop as big as the bed allows; False: use LOOP_LEN
 LOOP_LEN = 760          # chain length around the loop when FILL_BED is False (~30 in)
-MAX_JOINT_DEG = 9.0     # how far each joint is bent on the corners (tested OK to 11)
+MAX_JOINT_DEG = 12.0    # how far each joint is bent on the corners (the joints can bend ~26 deg)
 BED = (350, 350)
 BED_MARGIN = 10
 C.SLOT = C.BW / 2 + C.GAP + C.PLAY + C.sc(0.5)   # wider channel in the diamonds so joints can bend on the corners
@@ -55,7 +55,7 @@ def bail_link(x0):
     m = (outer - inner).extrude(C.HL).translate([x0, 0, 0]) - C.tunnels(x0, x0 + C.LO)
     xc = x0 + C.LO / 2
     m -= C.box(xc - C.TUN, xc + C.TUN, -WO_B / 2 - 1, -WO_B / 2 + C.RW + 0.6, -1, C.HB)
-    return m
+    return C.relieve(m)
 
 
 # ---------------- chain loop ----------------
@@ -198,7 +198,7 @@ def hang(y_top, med_gold_src, med_blue_src, med_bail_cy):
     bb = bail.bounding_box()
     assert abs(bb[1] - a) < 1e-6 and abs(bb[2]) < 1e-6, bb   # profile landed where intended
     assert a - (ring_c - ri) > 0.5, "bail post doesn't fit inside the medallion's loop"
-    return mg, mb, bail
+    return mg, mb, C.relieve(bail)
 
 
 gold_parts, blue_parts, links, conns, joint_angles = lay(kinds, path)

@@ -31,7 +31,7 @@ NECKLACE_LEN = 760      # total length when closed (~30 in)
 SEGMENTS = 2            # pieces: 2 = clasp at the back + medallion joint at the front
 BED = (350, 350)        # print bed (mm); pieces are laid diagonally if they don't fit straight
 BED_MARGIN = 10         # keep this far from the bed edges
-GAP = 0.7               # print-in-place clearance side to side (raised from 0.5 after a test print fused)
+GAP = 1.0               # print-in-place clearance side to side (0.5 and 0.7 both fused in test prints)
 GAP_Z = 1.0             # clearance above/below the short bridges (bridges sag, so this needs more);
                         # keep it a multiple of your layer height
 
@@ -56,9 +56,9 @@ POST = sc(1.6)          # post length along the chain
 BT = lz(2.0)            # top bar thickness
 
 # flat links
-LO, WO = sc(14.0), sc(9.5)   # gold link outer length / width
+LO, WO = sc(14.0), sc(10.5)  # gold link outer length / width
 RW = sc(1.8)            # rail width
-S = sc(1.0)             # bed gap between consecutive flat links
+S = sc(2.0)             # bed gap between consecutive flat links (doubled: neighbours fused on bends)
 TB = lz(1.6)            # thickness of the arched end bar above its tunnel
 HB = TC + GAP_Z         # tunnel height under each end bar
 HL = HB + TB            # flat link height
@@ -80,9 +80,19 @@ TBAR_LEN, TBAR_W = sc(21.0), sc(2.6)   # toggle bar (length across, along-chain 
 STEM, STEM_H = sc(12.0), lz(3.0)       # solid stem between the last link and the T-bar; the clasp ring and
                                        # the medallion's loop both ride on it
 SEG = 48
+FOOT_RELIEF = 0.4       # the bottom FOOT_H of every part is pulled in by this much, so first-layer squish
+FOOT_H = 0.4            # (elephant foot) and brim lines can't bridge the gaps between parts on the bed
 
 def box(x0, x1, y0, y1, z0, z1):
     return Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0])
+
+def relieve(m):
+    """pull in the bottom FOOT_H of a part by FOOT_RELIEF (built-in elephant-foot compensation)"""
+    if FOOT_RELIEF <= 0:
+        return m
+    base = m.slice(FOOT_H / 2).offset(-FOOT_RELIEF, JoinType.Miter).extrude(FOOT_H)
+    return (m - box(-1e4, 1e4, -1e4, 1e4, -1, FOOT_H)) + base
+
 
 def tunnels(x0, x1):
     """cut the tunnels under the end bars of a flat link spanning x0..x1"""
@@ -94,7 +104,7 @@ def flat_link(x0):
     outer = CrossSection.square([LO - 2 * r, WO - 2 * r]).translate([r, r - WO / 2]).offset(
         r, JoinType.Round, circular_segments=SEG)
     inner = CrossSection.square([LO - 2 * RW, WO - 2 * RW]).translate([RW, RW - WO / 2])
-    return (outer - inner).extrude(HL).translate([x0, 0, 0]) - tunnels(x0, x0 + LO)
+    return relieve((outer - inner).extrude(HL).translate([x0, 0, 0]) - tunnels(x0, x0 + LO))
 
 def diamond_link(x0):
     """diamond frame, points blunted along the chain so each end is a straight arched bar"""
@@ -105,7 +115,7 @@ def diamond_link(x0):
     outer = dia(D_HALF) ^ CrossSection.square([LD, 2 * D_HALF + 2]).translate([x0, -D_HALF - 1])
     hole = dia(D_HALF * D_HOLE) ^ CrossSection.square([LD - 2 * RW, 2 * D_HALF]).translate([x0 + RW, -D_HALF])
     inner = hole + CrossSection.square([LD - 2 * RW, 2 * SLOT]).translate([x0 + RW, -SLOT])
-    return (outer - inner).extrude(HL) - tunnels(x0, x1)
+    return relieve((outer - inner).extrude(HL) - tunnels(x0, x1))
 
 def toggle_ring(x_end):
     """round ring ending at x_end; under the connector its rear rail sits where a flat link's bar does"""
@@ -115,20 +125,20 @@ def toggle_ring(x_end):
     ring = CrossSection.circle(ro, SEG * 2) - CrossSection.circle(ri, SEG * 2)
     m = ring.extrude(HL).translate([cx, 0, 0])
     m -= box(x_end - RW - 1.0, x_end + RW + 2, -TUN, TUN, -1, HB)
-    return m, cx - ro
+    return relieve(m), cx - ro
 
 def connector(x_end, tbar=False):
     """closed upright loop linking the flat link ending at x_end with the next one"""
     a = x_end - RW - GAP - PLAY - POST
     if not tbar:
         b = x_end + S + RW + GAP + PLAY + POST
-        return box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
+        return relieve(box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0))
     # end piece: loop around the last link's rear bar, then a stem, then the T-bar
     b = x_end + GAP + PLAY + POST
     loop = box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
     stem = box(b - 0.5, b + STEM, -BW / 2, BW / 2, 0, STEM_H)
     bar = box(b + STEM - TBAR_W, b + STEM, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
-    return loop + stem + bar
+    return relieve(loop + stem + bar)
 
 def union(ms):
     out = ms[0]
