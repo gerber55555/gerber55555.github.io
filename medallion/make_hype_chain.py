@@ -24,7 +24,7 @@ import make_chain as C
 # ---------------- parameters (mm) ----------------
 FILL_BED = True         # True: make the loop as big as the bed allows; False: use LOOP_LEN
 LOOP_LEN = 760          # chain length around the loop when FILL_BED is False (~30 in)
-MAX_JOINT_DEG = 12.0    # how far each joint is bent on the corners (the joints can bend ~26 deg)
+MAX_JOINT_DEG = 14.0    # how far each joint is bent on the corners (the joints can bend ~19 deg)
 BED = (350, 350)
 BED_MARGIN = 10
 C.SLOT = C.BW / 2 + C.GAP + C.PLAY + C.sc(0.5)   # wider channel in the diamonds so joints can bend on the corners
@@ -214,11 +214,11 @@ blue_parts += [med_blue]
 # 7 links on an arc bent as much as the real corners, with the bail link in the middle,
 # the bail, and a copy of the medallion's loop on a small tab.
 def build_test():
-    """9 links from the top of the real loop: the bail link on the straight, then into the corner bends"""
-    t_kinds = ["r", "d", "r", "d", "r", "d", "r", "d", "r"]
+    """7 links from the top of the real loop: the bail link on the straight, then into the corner bends"""
+    t_kinds = ["d", "r", "d", "r", "d", "r", "d"]
     t_half = C.LO / 2 + C.S + 4        # just the bail link and its gaps on the straight, as on a small loop
     t_path = make_path(t_half, 8 * t_half + 2 * math.pi * RC)
-    tg, tb, tl, tc, ta = lay(t_kinds, t_path, closed=False, bail_index=4)
+    tg, tb, tl, tc, ta = lay(t_kinds, t_path, closed=False, bail_index=3)
     ring = (M.CrossSection.circle(M.BAIL_OR, 96) - M.CrossSection.circle(M.BAIL_HOLE, 96)
             + M.CrossSection.square([14, 8]).translate([-7, -M.BAIL_OR - 6])).extrude(M.BASE)
     mg, _, bl = hang(t_half + RC, ring, None, 0.0)
@@ -313,7 +313,7 @@ def main():
     print(f"{len(links)} links ({kinds.count('d')} diamonds), loop {perim:.0f} mm ({perim / 25.4:.0f} in), corner radius {RC:.0f} mm, "
           f"max joint bend {max(joint_angles):.1f} deg, plate {w:.0f} x {h:.0f} mm")
     tg, tb, tl, tc, ta, mg, bl = build_test()
-    check(tl, tc, [mg], bl, 4, closed=False)
+    check(tl, tc, [mg], bl, 3, closed=False)
     w, h = export("hype_test", C.union(tg), C.union(tb))
     print(f"test print: {len(tl)} links bent {min(ta):.1f}-{max(ta):.1f} deg per joint, {w:.0f} x {h:.0f} mm")
 

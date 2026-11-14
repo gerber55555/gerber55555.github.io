@@ -56,7 +56,7 @@ POST = sc(1.6)          # post length along the chain
 BT = lz(2.0)            # top bar thickness
 
 # flat links
-LO, WO = sc(14.0), sc(10.5)  # gold link outer length / width
+LO, WO = sc(20.0), sc(10.5)  # gold link outer length / width
 RW = sc(1.8)            # rail width
 S = sc(2.0)             # bed gap between consecutive flat links (doubled: neighbours fused on bends)
 TB = lz(1.6)            # thickness of the arched end bar above its tunnel
@@ -64,16 +64,18 @@ HB = TC + GAP_Z         # tunnel height under each end bar
 HL = HB + TB            # flat link height
 PLAY = sc(0.5)          # extra free movement on top of the print clearance (sideways in the tunnels/slots
                         # and along the chain inside each connector loop)
+PLAY_X = sc(2.0)        # extra slack ALONG the chain inside each connector loop (lets the chain drape)
 TUN = BW / 2 + GAP + PLAY    # tunnel half-width
 TOP0 = HL + GAP_Z       # underside of the connector's top bar
 
 # diamond "logo" links (every other flat link)
 LOGO_LINKS = True
-D_HALF = sc(10.0)       # half-diagonal (20 mm wide across the chain at scale 1)
+D_HALF = sc(10.0)       # half-diagonal across the chain (20 mm wide at scale 1)
+D_HALF_X = sc(13.0)     # half-diagonal along the chain (stretched, so the diamond has room for the slack)
 D_TIP = sc(4.2)         # the along-chain points are blunted to this half-width (room for the tunnel arch)
 D_HOLE = 0.56           # open centre as a fraction of the outer size (same look as the medallion)
 SLOT = BW / 2 + GAP + PLAY   # channel along the middle for the connector posts
-LD = 2 * (D_HALF - D_TIP)    # diamond link length along the chain
+LD = 2 * D_HALF_X * (1 - D_TIP / D_HALF)   # diamond link length along the chain (after blunting)
 
 RING_ID = sc(10.0)      # toggle ring inner diameter
 TBAR_LEN, TBAR_W = sc(21.0), sc(2.6)   # toggle bar (length across, along-chain width)
@@ -110,10 +112,11 @@ def diamond_link(x0):
     """diamond frame, points blunted along the chain so each end is a straight arched bar"""
     x1 = x0 + LD
     cx = x0 + LD / 2
-    def dia(h):
-        return CrossSection([[(cx + h, 0), (cx, h), (cx - h, 0), (cx, -h)]])
-    outer = dia(D_HALF) ^ CrossSection.square([LD, 2 * D_HALF + 2]).translate([x0, -D_HALF - 1])
-    hole = dia(D_HALF * D_HOLE) ^ CrossSection.square([LD - 2 * RW, 2 * D_HALF]).translate([x0 + RW, -D_HALF])
+    def dia(f):
+        hx, hy = D_HALF_X * f, D_HALF * f
+        return CrossSection([[(cx + hx, 0), (cx, hy), (cx - hx, 0), (cx, -hy)]])
+    outer = dia(1.0) ^ CrossSection.square([LD, 2 * D_HALF + 2]).translate([x0, -D_HALF - 1])
+    hole = dia(D_HOLE) ^ CrossSection.square([LD - 2 * RW, 2 * D_HALF]).translate([x0 + RW, -D_HALF])
     inner = hole + CrossSection.square([LD - 2 * RW, 2 * SLOT]).translate([x0 + RW, -SLOT])
     return relieve((outer - inner).extrude(HL) - tunnels(x0, x1))
 
@@ -129,12 +132,12 @@ def toggle_ring(x_end):
 
 def connector(x_end, tbar=False):
     """closed upright loop linking the flat link ending at x_end with the next one"""
-    a = x_end - RW - GAP - PLAY - POST
+    a = x_end - RW - GAP - PLAY_X - POST
     if not tbar:
-        b = x_end + S + RW + GAP + PLAY + POST
+        b = x_end + S + RW + GAP + PLAY_X + POST
         return relieve(box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0))
     # end piece: loop around the last link's rear bar, then a stem, then the T-bar
-    b = x_end + GAP + PLAY + POST
+    b = x_end + GAP + PLAY_X + POST
     loop = box(a, b, -BW / 2, BW / 2, 0, TOP0 + BT) - box(a + POST, b - POST, -BW, BW, TC, TOP0)
     stem = box(b - 0.5, b + STEM, -BW / 2, BW / 2, 0, STEM_H)
     bar = box(b + STEM - TBAR_W, b + STEM, -TBAR_LEN / 2, TBAR_LEN / 2, 0, BT)
