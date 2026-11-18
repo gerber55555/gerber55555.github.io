@@ -22,6 +22,7 @@ separate STLs) and chain_segment.stl (one piece).
 Requires: pip install manifold3d trimesh numpy networkx lxml
 """
 import os
+import os as _os
 import numpy as np
 import trimesh
 from manifold3d import Manifold, CrossSection, JoinType
@@ -31,12 +32,19 @@ NECKLACE_LEN = 760      # total length when closed (~30 in)
 SEGMENTS = 2            # pieces: 2 = clasp at the back + medallion joint at the front
 BED = (350, 350)        # print bed (mm); pieces are laid diagonally if they don't fit straight
 BED_MARGIN = 10         # keep this far from the bed edges
-GAP = 1.0               # print-in-place clearance side to side (0.5 and 0.7 both fused in test prints)
-GAP_Z = 1.0             # clearance above/below the short bridges (bridges sag, so this needs more);
-                        # keep it a multiple of your layer height
-
-CHAIN_SCALE = 1.4       # overall size of the links (1.0 = the original design). Clearances (GAP, GAP_Z)
-                        # don't scale, so bigger links are stronger AND have more free movement
+# Two sizes. "slim": original-size links, crisper diamonds, normal print-in-place gaps - less plastic, faster to
+# print. "chunky": 1.4x links with very wide gaps and lots of slack (made while a misaligned tool head was fusing
+# parts; its files are kept in chunky/). Pick with CHAIN_PROFILE here or the CHAIN_PROFILE environment variable.
+PROFILES = {
+    #          scale  GAP   GAP_Z  PLAY  PLAY_X  LO    WO    S    D_HALF_X D_TIP FOOT_RELIEF
+    "slim":   (1.0,   0.7,  0.8,   0.3,  1.2,    18.0, 10.0, 1.6, 11.5,    4.0,  0.3),
+    "chunky": (1.4,   1.0,  1.0,   0.5,  2.0,    20.0, 10.5, 2.0, 13.0,    4.2,  0.4),
+}
+CHAIN_PROFILE = _os.environ.get("CHAIN_PROFILE", "slim")
+(CHAIN_SCALE, GAP, GAP_Z, _PLAY, _PLAY_X, _LO, _WO, _S, _D_HALF_X, _D_TIP, _FOOT) = PROFILES[CHAIN_PROFILE]
+# GAP:   print-in-place clearance side to side
+# GAP_Z: clearance above/below the short bridges (bridges sag, so this needs more); a multiple of the layer height
+# CHAIN_SCALE: overall size of the links (1.0 = the original design); clearances don't scale
 LAYER = 0.2             # heights are rounded to whole layers
 
 
@@ -56,23 +64,23 @@ POST = sc(1.6)          # post length along the chain
 BT = lz(2.0)            # top bar thickness
 
 # flat links
-LO, WO = sc(20.0), sc(10.5)  # gold link outer length / width
+LO, WO = sc(_LO), sc(_WO)    # gold link outer length / width
 RW = sc(1.8)            # rail width
-S = sc(2.0)             # bed gap between consecutive flat links (doubled: neighbours fused on bends)
+S = sc(_S)              # bed gap between consecutive flat links
 TB = lz(1.6)            # thickness of the arched end bar above its tunnel
 HB = TC + GAP_Z         # tunnel height under each end bar
 HL = HB + TB            # flat link height
-PLAY = sc(0.5)          # extra free movement on top of the print clearance (sideways in the tunnels/slots
+PLAY = sc(_PLAY)        # extra free movement on top of the print clearance (sideways in the tunnels/slots
                         # and along the chain inside each connector loop)
-PLAY_X = sc(2.0)        # extra slack ALONG the chain inside each connector loop (lets the chain drape)
+PLAY_X = sc(_PLAY_X)    # extra slack ALONG the chain inside each connector loop (lets the chain drape)
 TUN = BW / 2 + GAP + PLAY    # tunnel half-width
 TOP0 = HL + GAP_Z       # underside of the connector's top bar
 
 # diamond "logo" links (every other flat link)
 LOGO_LINKS = True
 D_HALF = sc(10.0)       # half-diagonal across the chain (20 mm wide at scale 1)
-D_HALF_X = sc(13.0)     # half-diagonal along the chain (stretched, so the diamond has room for the slack)
-D_TIP = sc(4.2)         # the along-chain points are blunted to this half-width (room for the tunnel arch)
+D_HALF_X = sc(_D_HALF_X)  # half-diagonal along the chain (stretched, so the diamond has room for the slack)
+D_TIP = sc(_D_TIP)      # the along-chain points are blunted to this half-width (room for the tunnel arch)
 D_HOLE = 0.56           # open centre as a fraction of the outer size (same look as the medallion)
 SLOT = BW / 2 + GAP + PLAY   # channel along the middle for the connector posts
 LD = 2 * D_HALF_X * (1 - D_TIP / D_HALF)   # diamond link length along the chain (after blunting)
@@ -82,7 +90,7 @@ TBAR_LEN, TBAR_W = sc(21.0), sc(2.6)   # toggle bar (length across, along-chain 
 STEM, STEM_H = sc(12.0), lz(3.0)       # solid stem between the last link and the T-bar; the clasp ring and
                                        # the medallion's loop both ride on it
 SEG = 48
-FOOT_RELIEF = 0.4       # the bottom FOOT_H of every part is pulled in by this much, so first-layer squish
+FOOT_RELIEF = _FOOT     # the bottom FOOT_H of every part is pulled in by this much, so first-layer squish
 FOOT_H = 0.4            # (elephant foot) and brim lines can't bridge the gaps between parts on the bed
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -188,10 +196,11 @@ def check_interlock():
     links.append(flat_link(x3)); conns.append(connector(x3 + LO, tbar=True))
     dirs = [np.array(v, float) / np.linalg.norm(v) for v in itertools.product([-1, 0, 1], repeat=3) if any(v)]
     pairs = [(0, 1), (1, 2), (2, 3), (4,)]
-    shifts = [(0.6, 0, 0), (-0.6, 0, 0), (0, 0.6, 0), (0, -0.6, 0), (0, 0, 0.9), (0, 0, -0.9)]
+    d, dz = GAP - 0.1, GAP_Z - 0.1
+    shifts = [(d, 0, 0), (-d, 0, 0), (0, d, 0), (0, -d, 0), (0, 0, dz), (0, 0, -dz)]
     for i, c in enumerate(conns):
         assert all((c.translate(list(v)) ^ l).volume() < 1e-6 for l in links for v in shifts), \
-            f"connector {i} has less than 0.6 mm (side) / 0.9 mm (vertical) clearance"
+            f"connector {i} has less clearance than GAP / GAP_Z"
         for dv in dirs:
             assert any((c.translate(list(dv * t)) ^ links[j]).volume() > 1e-6
                        for t in np.arange(0.25, 40, 0.25) for j in pairs[i]), \

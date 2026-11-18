@@ -33,8 +33,8 @@ MEDALLION_SIZE = 160     # diameter in mm, or "fill" for as big as fits inside t
 MED_CLEAR = 4.0         # keep the medallion this far from the chain links
 G2 = C.sc(12.0)              # gap between the bail link and the medallion's loop: long enough that the
                         # medallion can swing ~180 degrees over the chain to hang down when worn
-MIN_CLEAR_XY = 0.5      # the checks fail if any moving part has less room than this side to side...
-MIN_CLEAR_Z = 0.9       # ...or above/below (a test print fused at 0.5 mm)
+MIN_CLEAR_XY = C.GAP - 0.2   # the checks fail if any moving part has less room than this side to side...
+MIN_CLEAR_Z = C.GAP_Z - 0.1  # ...or above/below
 BAIL_RISE = C.sc(4.0)        # the bail's roof rises at 45 degrees by this much (keeps its flat bridge short)
 
 GOLD = [212, 175, 55, 255]
