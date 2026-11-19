@@ -4,16 +4,16 @@
 // All dimensions in mm.
 
 height    = 22;   // bracket height (top to bottom on the amp)
-foot      = 24;   // width of the standoff leg that touches the grille
+foot      = 22;   // width of the standoff leg that touches the grille
 gap       = 22;   // clear space between grille and arm (room for the cord)
-arm_len   = 55;   // how far the arm reaches past the standoff
+arm_len   = 43;   // how far the arm reaches past the standoff
 arm_t     = 10;   // arm thickness
 tip_lip   = 3;    // small hook at the arm tip toward the grille (0 = none)
 fillet    = 6;    // inside-corner reinforcement
 hole_d    = 4.5;  // M4 / #8 clearance
 head_d    = 8.5;  // counterbore for the screw head
 head_h    = 4;    // counterbore depth
-hole_pitch= 12;   // spacing between the two bolts
+hole_pitch= 10;   // spacing between the two bolts
 slot      = 6;    // slot length, lets the bolts line up with the grille's hex holes
 
 $fn = 40;
