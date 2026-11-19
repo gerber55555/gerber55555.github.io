@@ -1,21 +1,22 @@
-# Peavey 5150 cord-wrap bracket
+# Peavey 5150 cord-wrap bracket (L-shaped)
 
-A replacement for the power-cord wrap cleats on a Peavey 5150 / 6505 head.
-Print **two**. Mount one near the top and one near the bottom of the back panel,
-then wind the power cord around both.
+A replacement for the L-shaped power-cord wrap brackets on the rear grille of a
+Peavey 5150 / 6505 head. Print **two identical** parts.
 
-- `cord_wrap.stl`: ready to slice (70 × 42 × 38 mm)
-- `cord_wrap.scad`: parametric source. Open it in OpenSCAD, change the numbers, then export.
+- `cord_wrap.stl`: ready to slice (79 × 22 × 32 mm)
+- `cord_wrap.scad`: parametric source for OpenSCAD
 
 ## Printing
-- PETG or ABS/ASA. PLA can creep near a warm amp.
-- Lay it **on its side** so the Z-profile is flat on the bed. Layers then run along the
-  bend, and you don't need supports.
-- 4 walls, 30–40% infill.
+- PETG or ABS/ASA. PLA can creep near hot tubes.
+- Lay it **on its side** so the L shape is flat on the bed. The inside corner is then
+  as strong as it can be, and you don't need supports.
+- 4 walls, 40% infill.
 
 ## Mounting
-- The holes take #8 (M4) countersunk wood screws, about 5/8" (16 mm) long. Check that the
-  screw is shorter than the panel is thick.
-- If your cabinet already has holes or inserts from factory brackets, measure their spacing
-  and set `hole_pitch` (and `hole_d` for machine screws) in the .scad file.
-- Mount each bracket so its lip faces **away** from the other bracket.
+- Use two M4 (or #8-32) pan-head machine screws, about 35 mm (1-3/8") long, through the
+  bracket and an opening in the honeycomb grille. Put a fender washer and a nylock nut
+  behind the grille. The bolt holes are slotted so they can line up with the hex openings.
+- Mount the brackets roughly 12–14" apart, one a little higher than the other like the
+  factory ones, with the arms pointing **away** from each other. The parts are identical:
+  rotate one 180°.
+- Loop the cord around the outside of both arms.
