@@ -12,10 +12,18 @@ Peavey 5150 / 6505 head. Print **two identical** parts.
   as strong as it can be, and you don't need supports.
 - 4 walls, 40% infill.
 
-## Mounting
-- Use two M4 (or #8-32) pan-head machine screws, about 35 mm (1-3/8") long, through the
-  bracket and an opening in the honeycomb grille. Put a fender washer and a nylock nut
-  behind the grille. The bolt holes are slotted so they can line up with the hex openings.
+## Mounting (screws from behind the grille)
+- Take the rear cage off. Hold each bracket in place on the outside and drive two screws
+  from the inside of the cage, through the hex openings, into the blind holes in the foot.
+  Nothing shows on the front.
+- Screws: #8 or M4 self-tapping screws for plastic (e.g. plastite / thread-forming), about
+  1/2" (12–14 mm) **plus** the grille thickness, with a washer big enough to bridge a hex
+  opening. The holes are 26 mm deep, so there's plenty of room.
+- Want to take them on and off a lot? Set `use_insert = true` in the .scad file and press
+  in M4 heat-set inserts, then use M4 machine screws.
+- Before you print, measure the centre-to-centre distance of two **side-by-side** grille
+  openings and set `hole_pitch` to it (the default is 10 mm). Both screws need to line up
+  with openings.
 - Mount the brackets level with each other, about 15" (390 mm) apart centre-to-centre, at the height of the
   middle of the power tubes, with the arms pointing **away** from each other. The parts are identical:
   rotate one 180°.
