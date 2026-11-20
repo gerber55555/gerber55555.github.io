@@ -40,12 +40,28 @@ PROFILES = {
     "slim":   (1.0,   0.7,  0.8,   0.3,  1.2,    18.0, 10.0, 1.6, 11.5,    4.0,  0.3),
     "chunky": (1.4,   1.0,  1.0,   0.5,  2.0,    20.0, 10.5, 2.0, 13.0,    4.2,  0.4),
 }
-CHAIN_PROFILE = _os.environ.get("CHAIN_PROFILE", "slim")
+CHAIN_PROFILE = _os.environ.get("CHAIN_PROFILE", "chunky")
 (CHAIN_SCALE, GAP, GAP_Z, _PLAY, _PLAY_X, _LO, _WO, _S, _D_HALF_X, _D_TIP, _FOOT) = PROFILES[CHAIN_PROFILE]
 # GAP:   print-in-place clearance side to side
 # GAP_Z: clearance above/below the short bridges (bridges sag, so this needs more); a multiple of the layer height
 # CHAIN_SCALE: overall size of the links (1.0 = the original design); clearances don't scale
 LAYER = 0.2             # heights are rounded to whole layers
+
+# IDEX printers: each tool head reaches a different X range (machine coordinates, bed centre = 0). Gold prints
+# on T0, blue on T1. Plates are exported centred on X = 0 and checked against these (values for an IDEX 22 V4).
+TOOL_X = {"gold": (-208.0, 161.0), "blue": (-161.0, 208.0)}
+TOOL_X_MARGIN = 1.0
+
+
+def check_tool_reach(parts, name="plate"):
+    """parts: {"gold": manifold or None, "blue": ...} already positioned as exported (centred on X = 0)"""
+    for colour, m in parts.items():
+        if m is None:
+            continue
+        lo, hi = TOOL_X[colour]
+        bb = m.bounding_box()
+        assert bb[0] >= lo + TOOL_X_MARGIN and bb[3] <= hi - TOOL_X_MARGIN, (
+            f"{name}: {colour} spans X {bb[0]:.1f}..{bb[3]:.1f}, outside its tool head's reach {lo}..{hi}")
 
 
 def sc(v):
@@ -248,6 +264,8 @@ def main():
     assert fits(plate_all), "pieces don't fit the bed - increase SEGMENTS"
     off = centre_offset(plate_all)
     plate_all = plate_all.translate(off)
+    check_tool_reach({"gold": layout(seg_gold, rot).translate(off),
+                      "blue": layout(seg_blue, rot).translate(off) if seg_blue else None}, "chain_plate")
     to_trimesh(plate_all).export(os.path.join(here, "chain_plate.stl"))
 
     scene = trimesh.Scene()
@@ -277,6 +295,7 @@ def main():
     bail = bail.translate([tlen / 2, -(TBAR_LEN / 2 + BAIL_RI + BAIL_WALL + 5), 0])
     tg = tg + bail
     toff = centre_offset(tg + tb)
+    check_tool_reach({"gold": tg.translate(toff), "blue": tb.translate(toff)}, "chain_test")
     test_scene = trimesh.Scene()
     for name, m, col in [("gold", tg, [212, 175, 55, 255]), ("blue", tb, [30, 70, 200, 255])]:
         pm = to_trimesh(m.translate(toff))

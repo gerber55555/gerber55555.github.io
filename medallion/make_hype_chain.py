@@ -62,10 +62,14 @@ def bail_link(x0):
 # rounded-square path: corner radius from the joint-angle limit
 max_step = max(C.LO, C.LD) + C.S
 RC = max_step / math.radians(MAX_JOINT_DEG)
+# the plate is printed centred on X = 0; gold and blue both run all round the loop, so in X it must stay where
+# BOTH tool heads reach (C.TOOL_X); in Y it can use the bed
+X_LIMIT = min(-max(lo for lo, _ in C.TOOL_X.values()), min(hi for _, hi in C.TOOL_X.values())) - C.TOOL_X_MARGIN
+reach_x = min(X_LIMIT, BED[0] / 2 - BED_MARGIN) - C.D_HALF - 0.5
+reach_y = BED[1] / 2 - BED_MARGIN - C.D_HALF - 0.5
 if FILL_BED:
-    # largest loop whose outer edge (the diamonds stick out D_HALF from the centre line) fits the bed
-    reach = min(BED) / 2 - BED_MARGIN - C.D_HALF - 0.5
-    target = 8 * (reach - RC) + 2 * math.pi * RC
+    # largest loop whose outer edge (the diamonds stick out D_HALF from the centre line) fits
+    target = 4 * (reach_x - RC) + 4 * (reach_y - RC) + 2 * math.pi * RC
 else:
     target = LOOP_LEN
 
@@ -77,22 +81,26 @@ while total + pair <= target if FILL_BED else total < target:
     total += pair
 lengths = [C.LD if k == "d" else C.LO for k in kinds]
 perim = sum(lengths) + C.S * len(kinds)
-side = (perim - 2 * math.pi * RC) / 4
-assert side >= C.LO + 2 * C.S, "loop too short for these corners - raise LOOP_LEN or MAX_JOINT_DEG"
-half = side / 2
+straights = (perim - 2 * math.pi * RC) / 4          # = half_x + half_y
+half_x = min(reach_x - RC, straights / 2) if FILL_BED else straights / 2
+half_y = straights - half_x
+assert half_x >= C.LO / 2 + C.S and half_y >= 0, "loop too short for these corners - raise LOOP_LEN or MAX_JOINT_DEG"
+assert half_y <= reach_y - RC + 1e-6, "loop too long for the bed"
+half = half_y          # the top of the loop (where the bail hangs) is at y = half + RC
 
 
-def make_path(half, perim):
-    """rounded square with straight sides of 2*half; arc length s from the top centre, clockwise"""
-    side = 2 * half
-    pieces = [("line", (0, half + RC), (1, 0), half)]
-    centres = [(half, half), (half, -half), (-half, -half), (-half, half)]
+def make_path(hx, hy, perim):
+    """rounded rectangle with straight sides 2*hx (top/bottom) and 2*hy (left/right);
+    arc length s from the top centre, clockwise"""
+    pieces = [("line", (0, hy + RC), (1, 0), hx)]
+    centres = [(hx, hy), (hx, -hy), (-hx, -hy), (-hx, hy)]
     dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
-    starts = [(half + RC, half), (half, -half - RC), (-half - RC, -half), (-half, half + RC)]
+    starts = [(hx + RC, hy), (hx, -hy - RC), (-hx - RC, -hy), (-hx, hy + RC)]
+    lens = [2 * hy, 2 * hx, 2 * hy, hx]
     start_ang = [90, 0, -90, 180]
     for k in range(4):
         pieces.append(("arc", centres[k], start_ang[k], math.pi / 2 * RC))
-        pieces.append(("line", starts[k], dirs[k], side if k < 3 else half))
+        pieces.append(("line", starts[k], dirs[k], lens[k]))
 
     def path(s):
         s %= perim
@@ -107,7 +115,7 @@ def make_path(half, perim):
     return path
 
 
-path = make_path(half, perim)
+path = make_path(half_x, half_y, perim)
 
 
 # ---------------- medallion size ----------------
@@ -217,7 +225,7 @@ def build_test():
     """7 links from the top of the real loop: the bail link on the straight, then into the corner bends"""
     t_kinds = ["d", "r", "d", "r", "d", "r", "d"]
     t_half = C.LO / 2 + C.S + 4        # just the bail link and its gaps on the straight, as on a small loop
-    t_path = make_path(t_half, 8 * t_half + 2 * math.pi * RC)
+    t_path = make_path(t_half, t_half, 8 * t_half + 2 * math.pi * RC)
     tg, tb, tl, tc, ta = lay(t_kinds, t_path, closed=False, bail_index=3)
     ring = (M.CrossSection.circle(M.BAIL_OR, 96) - M.CrossSection.circle(M.BAIL_HOLE, 96)
             + M.CrossSection.square([14, 8]).translate([-7, -M.BAIL_OR - 6])).extrude(M.BASE)
@@ -293,6 +301,7 @@ def export(prefix, gold, blue):
     off = [-(bb[0] + bb[3]) / 2, -(bb[1] + bb[4]) / 2, 0]
     w, h = bb[3] - bb[0], bb[4] - bb[1]
     assert w <= BED[0] - 2 * BED_MARGIN and h <= BED[1] - 2 * BED_MARGIN, "doesn't fit the bed"
+    C.check_tool_reach({"gold": gold.translate(off), "blue": blue.translate(off) if blue is not None else None}, prefix)
     here = os.path.dirname(os.path.abspath(__file__))
     scene = trimesh.Scene()
     for name, m, col in [("gold", gold, GOLD), ("blue", blue, BLUE)]:
